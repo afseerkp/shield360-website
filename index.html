@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shield360 Endpoint — Monitor, harden and contain every Windows endpoint</title>
+  <meta name="description" content="Shield360 Endpoint is a self-hosted endpoint monitoring and protection platform for Windows Servers and PCs. Central Defender management, exploit protection, brute-force blocking and automatic isolation of compromised machines.">
+  <meta name="theme-color" content="#0a0b0d">
+  <link rel="canonical" href="https://shield360.biz/">
+  <meta property="og:url" content="https://shield360.biz/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Shield360 Endpoint">
+  <meta property="og:description" content="Monitor, harden and contain every Windows endpoint — from one self-hosted console.">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@700&family=Geist:wght@300..800&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="s360-mark" viewBox="0 0 64 64">
+      <defs>
+        <linearGradient id="s360-sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f74ff"/><stop offset="1" stop-color="#1a4fe6"/></linearGradient>
+        <linearGradient id="s360-orb" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2a6bff"/><stop offset="1" stop-color="#3b8cff"/></linearGradient>
+      </defs>
+      <path d="M51.5 23.5c4.6.6 6.2 2.8 4 5.9" fill="none" stroke="url(#s360-orb)" stroke-width="3.4" stroke-linecap="round"/>
+      <path d="M32 5 11 13.6v14.6C11 41.6 19.8 53.4 32 58c12.2-4.6 21-16.4 21-29.8V13.6L32 5z" fill="url(#s360-sh)"/>
+      <path d="M32 5v53c12.2-4.6 21-16.4 21-29.8V13.6L32 5z" fill="#0f3fcc" opacity=".55"/>
+      <path d="M32 13.4 18.6 18.9v9.8c0 8.9 5.5 16.9 13.4 20.6 7.9-3.7 13.4-11.7 13.4-20.6v-9.8L32 13.4z" fill="#1d55e8"/>
+      <path d="M32 13.4v35.9c7.9-3.7 13.4-11.7 13.4-20.6v-9.8L32 13.4z" fill="#1442c4"/>
+      <path d="m23.6 28.6 6.2 6.2 11.2-12" fill="none" stroke="#1fd6ee" stroke-width="5.2"/>
+      <path d="M15.6 26.4C6.4 30.6 3.6 37 10.4 40.2c7.4 3.5 25.6 1.6 40.6-6.8" fill="none" stroke="url(#s360-orb)" stroke-width="3.6" stroke-linecap="round"/>
+      <circle cx="53.4" cy="31.6" r="4" fill="#18dbe8" stroke="#0a0b0d" stroke-width="1.4"/>
+    </symbol>
+  </svg>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="sr-only" id="sr-status" role="status" aria-live="polite"></div>
+
+  <!-- ============ NAV ============ -->
+  <header class="nav" id="nav">
+    <div class="wrap nav-inner">
+      <a href="#top" class="brand" aria-label="Shield360 Endpoint home">
+        <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#s360-mark"/></svg>
+        <span><span class="wordmark">Shield<b>360</b></span> <em>Endpoint</em></span>
+      </a>
+      <nav class="nav-links" id="nav-links" aria-label="Primary">
+        <a href="#visibility">Visibility</a>
+        <a href="#protection">Protection</a>
+        <a href="#isolation">Isolation</a>
+        <a href="#security">Security</a>
+        <a href="#deploy">Deploy</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <div class="nav-cta">
+        <a href="mailto:sales@shield360.biz?subject=Shield360%20Endpoint%20enquiry" class="btn btn-ghost btn-sm nav-sales">Contact sales</a>
+        <a href="#deploy" class="btn btn-primary btn-sm">Get started</a>
+        <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links"><span></span><span></span></button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ============ HERO ============ -->
+    <section class="hero" id="top">
+      <div class="hero-bg" aria-hidden="true">
+        <div class="grid-lines"></div>
+        <div class="glow glow-a"></div>
+        <div class="glow glow-b"></div>
+      </div>
+      <div class="wrap hero-inner">
+        <div class="hero-copy">
+          <a href="#isolation" class="eyebrow-pill reveal">
+            <span class="dot-live"></span> New · Automatic isolation of compromised PCs <span class="arrow">→</span>
+          </a>
+          <h1 class="hero-title reveal">
+            Every Windows endpoint.<br>
+            <span class="serif">One calm</span> <span class="accent-text">console.</span>
+          </h1>
+          <p class="hero-sub reveal">
+            Shield360 Endpoint monitors, hardens and contains your Windows Servers and PCs from a single self‑hosted console. A lightweight PowerShell agent, Microsoft Defender as the engine, and a prevention layer that heals itself every 15 minutes.
+          </p>
+          <div class="hero-ctas reveal">
+            <a href="#deploy" class="btn btn-primary btn-lg">Deploy in minutes <span class="arrow">→</span></a>
+            <a href="#visibility" class="btn btn-ghost btn-lg">Tour the console</a>
+          </div>
+          <div class="install-chip reveal">
+            <span class="ic-prompt" aria-hidden="true">PS&gt;</span>
+            <code id="hero-cmd">irm https://shield360.biz/install.ps1 | iex</code>
+            <button class="copy" data-copy="hero-cmd" aria-label="Copy install command">Copy</button>
+          </div>
+          <ul class="hero-facts reveal" aria-label="Highlights">
+            <li><b>0</b> npm packages</li>
+            <li><b>0</b> extra software on endpoints</li>
+            <li><b>100%</b> on your own server</li>
+          </ul>
+        </div>
+
+        <!-- Console mockup -->
+        <div class="hero-visual reveal" aria-label="Preview of the Shield360 console">
+          <div class="console" id="hero-console">
+            <div class="console-bar">
+              <span class="tl"></span><span class="tl"></span><span class="tl"></span>
+              <span class="sample-tag">Sample data</span>
+              <button class="motion-toggle" id="motion-toggle" aria-pressed="false" aria-label="Pause animations">
+                <svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3h2v10H5zM9 3h2v10H9z" fill="currentColor"/></svg>
+                <svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3l8 5-8 5z" fill="currentColor"/></svg>
+              </button>
+              <div class="console-url"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 7V5a3 3 0 0 1 6 0v2h1v7H4V7h1zm1.5 0h3V5a1.5 1.5 0 0 0-3 0v2z" fill="currentColor"/></svg>shield360.corp.local:8443</div>
+            </div>
+            <p class="sr-only">Preview of the Shield360 console with sample data: 248 endpoints, CPU and memory charts, top hosts and open alerts.</p>
+            <div class="console-body" aria-hidden="true">
+              <aside class="c-side">
+                <div class="c-brand"><svg viewBox="0 0 64 64"><use href="#s360-mark"/></svg>Shield360</div>
+                <span class="c-nav on">Overview</span>
+                <span class="c-nav">Endpoints</span>
+                <span class="c-nav">Alerts <b id="c-alert-pill">3</b></span>
+                <span class="c-nav">Attack events</span>
+                <span class="c-label">Prevention</span>
+                <span class="c-nav">Policies</span>
+                <span class="c-nav">Definitions</span>
+                <span class="c-nav">Blocklist</span>
+              </aside>
+              <div class="c-main">
+                <div class="c-head">
+                  <div><div class="c-title">Overview</div><div class="c-muted">248 endpoints · updated <span id="c-ago">just now</span></div></div>
+                  <span class="c-chip ok"><i></i>All policies applied</span>
+                </div>
+                <div class="c-kpis">
+                  <div class="c-kpi"><span>Online</span><b id="k-online">241</b><small class="up">of 248</small></div>
+                  <div class="c-kpi"><span>Protected</span><b id="k-prot">99.2%</b><small class="up">+0.4%</small></div>
+                  <div class="c-kpi"><span>Open alerts</span><b id="k-alerts">3</b><small>1 critical</small></div>
+                  <div class="c-kpi"><span>Isolated</span><b id="k-iso">0</b><small>endpoints</small></div>
+                </div>
+                <div class="c-chart">
+                  <div class="c-chart-head"><span>Fleet CPU · 24h</span><span class="c-legend"><i class="l-cpu"></i>CPU <i class="l-mem"></i>Memory</span></div>
+                  <svg viewBox="0 0 400 90" preserveAspectRatio="none" class="spark" aria-hidden="true">
+                    <defs>
+                      <linearGradient id="gcpu" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#3b7bff" stop-opacity=".35"/><stop offset="1" stop-color="#3b7bff" stop-opacity="0"/></linearGradient>
+                    </defs>
+                    <path id="spark-cpu-area" fill="url(#gcpu)"/>
+                    <path id="spark-cpu" fill="none" stroke="#3b7bff" stroke-width="1.8"/>
+                    <path id="spark-mem" fill="none" stroke="#7aa7ff" stroke-width="1.4" stroke-dasharray="3 3"/>
+                  </svg>
+                </div>
+                <div class="c-table" id="c-table">
+                  <div class="c-row c-row-h"><span>Endpoint</span><span>OS</span><span>AV</span><span>CPU</span><span>Status</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="float-card fc-1" id="fc-alert">
+            <span class="sev crit"></span>
+            <div><b>Brute-force blocked</b><small>185.220.101.42 · 47 failed RDP logons</small></div>
+          </div>
+          <div class="float-card fc-2">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 3 6v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V6l-9-4z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m8 12 3 3 5-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <div><b>Policy re-applied</b><small>PUAProtection restored on WS-FIN-07</small></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="wrap platform-strip reveal">
+        <span class="ps-label">Runs on what you already have</span>
+        <ul>
+          <li>Windows Server 2016</li><li>2019</li><li>2022</li><li>2025</li>
+          <li>Windows 10</li><li>Windows 11</li><li>PowerShell 5.1</li><li>Node.js 22</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ STATS ============ -->
+    <section class="stats">
+      <div class="wrap stats-grid">
+        <div class="stat reveal"><b data-count="60">0</b><span class="unit">s</span><p>Agent check‑in interval. Live CPU, memory, disk and AV status for every machine.</p></div>
+        <div class="stat reveal"><b data-count="15">0</b><span class="unit">min</span><p>Policy re‑applied automatically. Local tampering is undone before anyone notices.</p></div>
+        <div class="stat reveal"><b data-count="17">0</b><span class="unit">ASR</span><p>Attack surface reduction rules, each set to Block, Audit or Off per policy.</p></div>
+        <div class="stat reveal"><b data-count="4">0</b><span class="unit">h</span><p>Server mirror refresh of Microsoft's signed definition package for offline networks.</p></div>
+      </div>
+    </section>
+
+    <!-- ============ ARCHITECTURE ============ -->
+    <section class="section arch" id="how">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">How it works</span>
+          <h2>Three parts. <span class="serif">No</span> moving pieces you don't own.</h2>
+          <p>An agent on each endpoint, one Node.js server with SQLite, and a browser. No cloud tenant, no per‑seat licence server, no third‑party agent to babysit.</p>
+        </div>
+
+        <div class="arch-diagram reveal">
+          <svg viewBox="0 0 1100 300" class="arch-svg" role="img" aria-label="Endpoints check in to the management server over HTTPS every 60 seconds; administrators use the browser console.">
+            <defs>
+              <linearGradient id="wire" x1="0" x2="1"><stop offset="0" stop-color="#3b7bff" stop-opacity=".1"/><stop offset=".5" stop-color="#3b7bff" stop-opacity=".6"/><stop offset="1" stop-color="#3b7bff" stop-opacity=".1"/></linearGradient>
+            </defs>
+            <!-- wires -->
+            <path id="w1" d="M300 90 C 380 90, 400 150, 470 150" class="wire"/>
+            <path id="w2" d="M300 150 L 470 150" class="wire"/>
+            <path id="w3" d="M300 210 C 380 210, 400 150, 470 150" class="wire"/>
+            <path id="w4" d="M710 150 L 860 150" class="wire"/>
+            <circle r="4" class="pkt"><animateMotion dur="2.4s" repeatCount="indefinite"><mpath href="#w1"/></animateMotion></circle>
+            <circle r="4" class="pkt"><animateMotion dur="2.4s" begin=".8s" repeatCount="indefinite"><mpath href="#w2"/></animateMotion></circle>
+            <circle r="4" class="pkt"><animateMotion dur="2.4s" begin="1.6s" repeatCount="indefinite"><mpath href="#w3"/></animateMotion></circle>
+            <circle r="4" class="pkt pkt-back"><animateMotion dur="3s" begin=".4s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear"><mpath href="#w2"/></animateMotion></circle>
+            <circle r="4" class="pkt pkt-blue"><animateMotion dur="2s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear"><mpath href="#w4"/></animateMotion></circle>
+
+            <!-- endpoints -->
+            <g class="node">
+              <rect x="60" y="66" width="240" height="48" rx="12"/>
+              <text x="84" y="96" class="n-t">DC-01</text><text x="276" y="96" class="n-s" text-anchor="end">Server 2022</text>
+            </g>
+            <g class="node">
+              <rect x="60" y="126" width="240" height="48" rx="12"/>
+              <text x="84" y="156" class="n-t">SQL-PROD-02</text><text x="276" y="156" class="n-s" text-anchor="end">Server 2019</text>
+            </g>
+            <g class="node">
+              <rect x="60" y="186" width="240" height="48" rx="12"/>
+              <text x="84" y="216" class="n-t">WS-FIN-07</text><text x="276" y="216" class="n-s" text-anchor="end">Windows 11</text>
+            </g>
+            <text x="180" y="40" class="n-cap" text-anchor="middle">Windows Servers &amp; PCs</text>
+            <text x="180" y="270" class="n-sub" text-anchor="middle">Shield360Agent.ps1 · SYSTEM task</text>
+
+            <!-- server -->
+            <g class="node node-core">
+              <rect x="470" y="90" width="240" height="120" rx="16"/>
+              <text x="590" y="132" class="n-t" text-anchor="middle">Management server</text>
+              <text x="590" y="156" class="n-s" text-anchor="middle">Node.js · SQLite</text>
+              <text x="590" y="184" class="n-m" text-anchor="middle">alerts · audit · policies · API</text>
+            </g>
+            <text x="385" y="126" class="n-lbl" text-anchor="middle">HTTPS · 60s</text>
+            <text x="385" y="190" class="n-lbl" text-anchor="middle">← actions</text>
+
+            <!-- console -->
+            <g class="node">
+              <rect x="860" y="110" width="180" height="80" rx="14"/>
+              <text x="950" y="146" class="n-t" text-anchor="middle">Web console</text>
+              <text x="950" y="168" class="n-s" text-anchor="middle">any browser</text>
+            </g>
+            <text x="950" y="40" class="n-cap" text-anchor="middle">Administrators</text>
+          </svg>
+        </div>
+
+        <div class="arch-cards">
+          <article class="mini-card reveal">
+            <span class="mc-num">01</span>
+            <h3>The agent</h3>
+            <p>Pure Windows PowerShell 5.1 — already on every supported machine. Runs as a SYSTEM scheduled task with a watchdog that restarts it within 5 minutes.</p>
+          </article>
+          <article class="mini-card reveal">
+            <span class="mc-num">02</span>
+            <h3>The server</h3>
+            <p>Node.js 22.13+ with built‑in SQLite. No npm packages to audit or patch. Runs on Windows Server, Windows or Linux.</p>
+          </article>
+          <article class="mini-card reveal">
+            <span class="mc-num">03</span>
+            <h3>The console</h3>
+            <p>A fast, focused web UI served with strict security headers. Overview, endpoints, alerts, policies, definitions and audit — nothing you don't need.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VISIBILITY (tabs) ============ -->
+    <section class="section visibility" id="visibility">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">Visibility</span>
+          <h2>See every machine <span class="serif">the way it really is.</span></h2>
+          <p>Hardware, security posture, inventory and live performance — reported every minute, searchable in seconds.</p>
+        </div>
+
+        <div class="tabs reveal" role="tablist" aria-label="Console areas" id="vis-tabs">
+          <button role="tab" aria-selected="true" aria-controls="vp" data-tab="overview">Overview</button>
+          <button role="tab" aria-selected="false" aria-controls="vp" data-tab="endpoints">Endpoints</button>
+          <button role="tab" aria-selected="false" aria-controls="vp" data-tab="system">System</button>
+          <button role="tab" aria-selected="false" aria-controls="vp" data-tab="security">Security</button>
+          <button role="tab" aria-selected="false" aria-controls="vp" data-tab="inventory">Inventory</button>
+          <button role="tab" aria-selected="false" aria-controls="vp" data-tab="actions">Actions</button>
+          <button role="tab" aria-selected="false" aria-controls="vp" data-tab="alerts">Alerts</button>
+          <button role="tab" aria-selected="false" aria-controls="vp" data-tab="audit">Audit log</button>
+        </div>
+
+        <div class="vis-panel reveal" id="vp" role="tabpanel">
+          <div class="vis-copy">
+            <h3 id="vp-title"></h3>
+            <p id="vp-desc"></p>
+            <ul class="checks" id="vp-list"></ul>
+          </div>
+          <div class="vis-art" id="vp-art" aria-hidden="true"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PROTECTION LAYERS ============ -->
+    <section class="section protection" id="protection">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">Antivirus &amp; attack prevention</span>
+          <h2>Eleven layers. <span class="serif">One policy.</span></h2>
+          <p>Shield360 manages Microsoft Defender — built into every supported Windows version — and adds its own prevention layer on top. Configure it once under Protection policies, assign it per endpoint, and pilot safely in <b>Report only</b> mode.</p>
+        </div>
+
+        <div class="bento">
+          <article class="b-card b-wide reveal" data-glow>
+            <div class="b-icon"><svg viewBox="0 0 24 24"><path d="M12 2 3 6v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V6l-9-4z"/></svg></div>
+            <h3>Antivirus, centrally enforced</h3>
+            <p>Real‑time, behaviour, script (AMSI), download and cloud protection. Cloud block level, PUA blocking, signature update interval, a daily quick scan and managed exclusions — all from one place.</p>
+            <div class="b-toggles" aria-hidden="true">
+              <span class="tg on">Real-time</span><span class="tg on">Behaviour</span><span class="tg on">AMSI</span><span class="tg on">Cloud</span><span class="tg on">PUA</span><span class="tg">Exclusions · 4</span>
+            </div>
+          </article>
+          <article class="b-card reveal" data-glow>
+            <div class="b-icon"><svg viewBox="0 0 24 24"><path d="M4 12h16M12 4v16M6 6l12 12M18 6 6 18"/></svg></div>
+            <h3>Exploit protection</h3>
+            <p>17 ASR rules — LSASS credential theft, Office macro abuse, obfuscated scripts, PsExec/WMI lateral movement, webshells, USB malware.</p>
+            <div class="asr" aria-hidden="true" id="asr-grid"></div>
+          </article>
+          <article class="b-card reveal" data-glow>
+            <div class="b-icon"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+            <h3>Ransomware</h3>
+            <p>The advanced ransomware protection rule plus controlled folder access guard the files that matter.</p>
+          </article>
+          <article class="b-card reveal" data-glow>
+            <div class="b-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg></div>
+            <h3>Malicious sites &amp; C2</h3>
+            <p>Defender network protection, plus blocklisted domains via hosts file and IPs via the firewall.</p>
+          </article>
+          <article class="b-card b-tall reveal" data-glow>
+            <div class="b-icon"><svg viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><circle cx="12" cy="12" r="4"/></svg></div>
+            <h3>Brute‑force blocking</h3>
+            <p>Watches failed logons — RDP, SMB and more — and blocks the attacking IP in the firewall for a set time. Trusted IPs stay on an allowlist.</p>
+            <div class="bf-log" aria-hidden="true" id="bf-log"></div>
+          </article>
+          <article class="b-card reveal" data-glow>
+            <div class="b-icon"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h6"/></svg></div>
+            <h3>Blocklist (IOCs)</h3>
+            <p>SHA‑256 hashes are killed and quarantined. IPs, CIDRs and domains are blocked. Paste whole threat feeds.</p>
+          </article>
+          <article class="b-card reveal" data-glow>
+            <div class="b-icon"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-2.5 2.5-2.5z"/></svg></div>
+            <h3>Hardening</h3>
+            <p>Firewall on, inbound blocked by default. SMBv1, LLMNR and WDigest off. NLA for RDP, PowerShell logging, optional LSA protection.</p>
+          </article>
+          <article class="b-card b-wide reveal" data-glow>
+            <div class="b-icon"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></div>
+            <h3>Attack detection</h3>
+            <p>Event‑log watch for log clearing, new accounts, privileged group changes, suspicious services, Defender being disabled and attack‑like PowerShell.</p>
+          </article>
+          <article class="b-card reveal" data-glow>
+            <div class="b-icon"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9"/><path d="M21 3v6h-6"/></svg></div>
+            <h3>Virus definitions</h3>
+            <p>Every endpoint on Microsoft's latest definitions — with a signed server mirror for networks that can't reach Microsoft.</p>
+          </article>
+          <article class="b-card b-full b-accent reveal" data-glow>
+            <div class="b-icon"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></svg></div>
+            <h3>Response actions &amp; automatic isolation</h3>
+            <p>Isolate or release, kill a process, quarantine a file, scan a path, remove threats, unblock an IP. And when an endpoint is compromised, it cuts itself off — without waiting for the server.</p>
+            <a href="#isolation" class="link-arrow">See isolation in action <span class="arrow">→</span></a>
+          </article>
+        </div>
+
+        <div class="selfheal reveal">
+          <div class="sh-ring" aria-hidden="true">
+            <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" class="sh-track"/><circle cx="60" cy="60" r="52" class="sh-prog" id="sh-prog"/></svg>
+            <div class="sh-center"><b id="sh-min">15:00</b><small>next re‑apply</small></div>
+          </div>
+          <div class="sh-copy">
+            <h3>Self‑healing by design</h3>
+            <p>Every 15 minutes the agent re‑applies its policy and reports compliance for each individual setting. Someone switched off PUA protection locally? It's back on the next cycle. Settings managed by Group Policy or Intune take precedence and are reported honestly as non‑compliant.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ISOLATION DEMO ============ -->
+    <section class="section isolation" id="isolation">
+      <div class="wrap iso-grid">
+        <div class="iso-copy">
+          <span class="eyebrow reveal">Automatic isolation</span>
+          <h2 class="reveal">When a PC is compromised, <span class="serif">it quarantines itself.</span></h2>
+          <p class="reveal">The moment an enabled trigger fires, the agent isolates the endpoint on its own — so it works even while your server is down. All inbound and outbound traffic is blocked, IPv4 and IPv6, internet and LAN. Except one line: back to Shield360, so you stay in control.</p>
+
+          <ul class="iso-facts reveal">
+            <li><b>Survives restarts.</b> Isolation stays on until an admin clicks <em>Release isolation</em>.</li>
+            <li><b>Works without DNS.</b> The server address is pinned in the hosts file.</li>
+            <li><b>Server‑safe by default.</b> Servers raise a critical alert instead, and you isolate with one click.</li>
+          </ul>
+
+          <div class="triggers reveal" aria-label="Isolation triggers">
+            <div class="tr-head"><span>Trigger (per policy)</span><span>Default</span></div>
+            <div class="tr"><span>Malware Defender could not remove</span><i class="sw on"></i></div>
+            <div class="tr"><span>Any malware detection</span><i class="sw"></i></div>
+            <div class="tr"><span>A blocklisted program was running</span><i class="sw on"></i></div>
+            <div class="tr"><span>Ransomware activity blocked</span><i class="sw on"></i></div>
+            <div class="tr"><span>Security event log cleared</span><i class="sw on"></i></div>
+            <div class="tr"><span>Antivirus turned off</span><i class="sw"></i></div>
+            <div class="tr"><span>Attack‑like PowerShell executed</span><i class="sw"></i></div>
+            <div class="tr"><span><b>Servers: alert only, don't auto‑isolate</b></span><i class="sw on"></i></div>
+          </div>
+        </div>
+
+        <div class="iso-demo reveal">
+          <div class="demo-card" id="demo">
+            <div class="demo-head">
+              <span class="demo-title"><span class="dot-live"></span> Live simulation</span>
+              <span class="demo-state" id="demo-state">Network healthy</span>
+            </div>
+            <svg viewBox="0 0 480 380" class="net" id="net" role="img" aria-label="Network diagram showing an endpoint being isolated">
+              <g id="net-links"></g>
+              <g id="net-nodes"></g>
+            </svg>
+            <div class="demo-log" id="demo-log" aria-live="polite"></div>
+            <div class="demo-actions">
+              <button class="btn btn-primary" id="demo-run">Simulate ransomware on WS‑FIN‑07</button>
+              <button class="btn btn-ghost" id="demo-reset" disabled>Release isolation</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DEFINITIONS ============ -->
+    <section class="section defs">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">Virus definitions</span>
+          <h2>The latest virus database. <span class="serif">Everywhere.</span></h2>
+          <p>Microsoft publishes new Defender definitions several times a day. Shield360 keeps every endpoint current in three layers — including the ones that can't reach the internet.</p>
+        </div>
+        <ol class="layers">
+          <li class="layer reveal">
+            <span class="layer-n">1</span>
+            <div>
+              <h3>Defender's own updater</h3>
+              <p>Runs at the interval set in your protection policy. Default: every 4 hours.</p>
+            </div>
+            <span class="layer-tag">every 4h</span>
+          </li>
+          <li class="layer reveal">
+            <span class="layer-n">2</span>
+            <div>
+              <h3>The agent double‑checks</h3>
+              <p>Every 15 minutes. Stale definitions are updated by the agent itself. Above twice the interval it's non‑compliant; above 3 days it raises an alert.</p>
+            </div>
+            <span class="layer-tag">every 15m</span>
+          </li>
+          <li class="layer reveal">
+            <span class="layer-n">3</span>
+            <div>
+              <h3>Signed server mirror</h3>
+              <p>The server fetches Microsoft's full package (<code>mpam-fe.exe</code>, ~200 MB) and keeps it only with a valid Microsoft signature. Isolated PCs and offline networks download it from you — and verify the signature again before installing.</p>
+            </div>
+            <span class="layer-tag">verified twice</span>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ============ SECURITY DESIGN ============ -->
+    <section class="section security" id="security">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">Security design</span>
+          <h2>A security tool <span class="serif">that isn't the weakest link.</span></h2>
+          <p>Management tools are high‑value targets. Shield360 is built so a compromised console can't be turned into a remote‑execution platform.</p>
+        </div>
+        <div class="sec-grid">
+          <article class="sec reveal"><h3>Per‑agent keys</h3><p>Each agent gets its own random key at enrollment. The server stores only a SHA‑256 hash. Removing an endpoint revokes it instantly.</p></article>
+          <article class="sec reveal"><h3>Fixed action allow‑list</h3><p>Remote actions come from a fixed list. The server <b>cannot</b> run arbitrary scripts on your endpoints — by design.</p></article>
+          <article class="sec reveal"><h3>Rotatable enrollment</h3><p>The enrollment token only registers new machines. Rotate it any time without touching enrolled agents.</p></article>
+          <article class="sec reveal"><h3>scrypt + lockout</h3><p>Admin passwords hashed with scrypt. HttpOnly, SameSite=Strict sessions. Five failed logins lock the source IP for five minutes.</p></article>
+          <article class="sec reveal"><h3>Strict headers</h3><p>The console ships with CSP, frame denial and nosniff. HTTPS with your own internal CA certificate is a single command.</p></article>
+          <article class="sec reveal"><h3>Locked‑down agent</h3><p>Config and key live in <code>C:\ProgramData\Shield360</code>, readable only by SYSTEM and Administrators. Full audit log of every action.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ALERTS ============ -->
+    <section class="section alerts-sec">
+      <div class="wrap alerts-grid">
+        <div class="reveal">
+          <span class="eyebrow">Built‑in alert rules</span>
+          <h2>Alerts that <span class="serif">raise and resolve</span> themselves.</h2>
+          <p class="lead">Sensible rules out of the box, thresholds you can tune in <code>config.json</code>. When the condition clears, the alert closes on its own — no stale queue to triage on Monday.</p>
+        </div>
+        <div class="sev-list reveal">
+          <div class="sev-row"><span class="badge crit">Critical</span><p>No active antivirus · Defender real‑time off · Threat detected · Auto‑isolated</p></div>
+          <div class="sev-row"><span class="badge high">High</span><p>Endpoint offline · Firewall profile disabled · Failed‑logon spike · Pending security updates</p></div>
+          <div class="sev-row"><span class="badge warn">Warning</span><p>Disk ≥ 90% · Sustained CPU ≥ 90% · Memory ≥ 90% · Outdated signatures · Workstation without BitLocker</p></div>
+          <div class="sev-row"><span class="badge info">Info</span><p>Restart pending</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DEPLOY ============ -->
+    <section class="section deploy" id="deploy">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">Deploy</span>
+          <h2>From zero to protected <span class="serif">before your coffee cools.</span></h2>
+          <p>One command installs the server — Node.js check, verified download, HTTPS certificate and auto‑start included. Then the console hands you ready‑to‑paste agent commands with your server URL and token already filled in.</p>
+        </div>
+
+        <div class="steps">
+          <div class="step reveal">
+            <div class="step-n">1</div>
+            <h3>Install the server</h3>
+            <div class="seg" role="tablist" aria-label="Server install method" id="seg-srv">
+              <button role="tab" aria-selected="true" data-m="quick">One‑liner</button>
+              <button role="tab" aria-selected="false" data-m="options">With options</button>
+              <button role="tab" aria-selected="false" data-m="manual">Manual</button>
+            </div>
+            <p id="seg-srv-desc"></p>
+            <div class="code">
+              <button class="copy" data-copy="s1" aria-label="Copy command">Copy</button>
+<pre id="s1"></pre>
+            </div>
+          </div>
+          <div class="step reveal">
+            <div class="step-n">2</div>
+            <h3>Deploy agents your way</h3>
+            <div class="seg" role="tablist" aria-label="Deployment method" id="seg">
+              <button role="tab" aria-selected="true" data-m="one">One machine</button>
+              <button role="tab" aria-selected="false" data-m="offline">Offline</button>
+              <button role="tab" aria-selected="false" data-m="gpo">Many machines</button>
+            </div>
+            <p id="seg-desc">Paste the one‑line command from the Deploy page into an elevated prompt.</p>
+            <div class="code">
+              <button class="copy" data-copy="s2" aria-label="Copy command">Copy</button>
+<pre id="s2"></pre>
+            </div>
+          </div>
+          <div class="step reveal">
+            <div class="step-n">3</div>
+            <h3>Watch it light up</h3>
+            <p>Within a minute the machine appears under Endpoints. Assign a policy, start in Report only, then switch to Enforce.</p>
+            <div class="enroll" aria-hidden="true">
+              <div class="en-row"><i class="ok"></i>WS-FIN-07 <span>enrolled · 14s ago</span></div>
+              <div class="en-row"><i class="ok"></i>WS-HR-12 <span>enrolled · 9s ago</span></div>
+              <div class="en-row en-new"><i class="ok"></i>SQL-PROD-02 <span>enrolled · now</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="downloads reveal" id="downloads">
+          <div class="dl-head">
+            <div>
+              <h3>Downloads</h3>
+              <p>Everything the installer uses, for air‑gapped networks or your own review. <span id="dl-meta"></span></p>
+            </div>
+            <a class="btn btn-ghost btn-sm" href="install.ps1" target="_blank" rel="noopener">View install.ps1</a>
+          </div>
+          <div class="dl-grid">
+            <a class="dl" id="dl-zip" href="download/latest.json" download>
+              <span class="dl-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></span>
+              <span class="dl-t"><b>Server &amp; agent package</b><small id="dl-zip-name">shield360-endpoint.zip</small></span>
+            </a>
+            <a class="dl" href="download/agent/Install-Shield360Agent.ps1" download>
+              <span class="dl-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H4zM8 20h8M12 16v4"/></svg></span>
+              <span class="dl-t"><b>Install-Shield360Agent.ps1</b><small>Agent installer</small></span>
+            </a>
+            <a class="dl" href="download/agent/Shield360Agent.ps1" download>
+              <span class="dl-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 3 6v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V6l-9-4z"/></svg></span>
+              <span class="dl-t"><b>Shield360Agent.ps1</b><small>Agent</small></span>
+            </a>
+            <a class="dl" href="download/agent/Uninstall-Shield360Agent.ps1" download>
+              <span class="dl-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></span>
+              <span class="dl-t"><b>Uninstall-Shield360Agent.ps1</b><small>Agent uninstaller</small></span>
+            </a>
+          </div>
+          <div class="dl-sum">
+            <span>SHA‑256</span><code id="dl-sha">see SHA256SUMS.txt</code>
+            <a href="download/SHA256SUMS.txt" target="_blank" rel="noopener">All checksums →</a>
+          </div>
+        </div>
+
+        <div class="reqs reveal">
+          <div class="req">
+            <h4>Server</h4>
+            <p>Any Windows Server or Windows machine (Linux works too) with Node.js 22.13 or later. No npm packages.</p>
+          </div>
+          <div class="req">
+            <h4>Endpoints</h4>
+            <p>Windows Server 2016 / 2019 / 2022 / 2025 or Windows 10 / 11 with built‑in Windows PowerShell 5.1.</p>
+          </div>
+          <div class="req">
+            <h4>At scale</h4>
+            <p>GPO startup script out of the box. Intune, SCCM or any RMM tool can run the same command.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ROADMAP ============ -->
+    <section class="section roadmap">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">Roadmap</span>
+          <h2>What's <span class="serif">next.</span></h2>
+        </div>
+        <div class="road reveal">
+          <span>Agent self‑update</span>
+          <span>Email, Teams &amp; Slack notifications</span>
+          <span>Multiple admins with roles</span>
+          <span>Signed MSI agent package</span>
+          <span>Restore from quarantine</span>
+          <span>Microsoft Defender for Endpoint integration</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FAQ ============ -->
+    <section class="section faq" id="faq">
+      <div class="wrap faq-grid">
+        <div class="reveal">
+          <span class="eyebrow">FAQ</span>
+          <h2>Questions, <span class="serif">answered.</span></h2>
+          <p class="lead">Still curious? The README and testing guide ship with every copy, or write to <a class="text-link" href="mailto:sales@shield360.biz">sales@shield360.biz</a>.</p>
+        </div>
+        <div class="faq-list reveal">
+          <details>
+            <summary>Do I need to replace my antivirus?</summary>
+            <p>No. Shield360 uses Microsoft Defender — already built into every supported Windows version — as its engine, and manages it centrally. It also reports third‑party AV where present.</p>
+          </details>
+          <details>
+            <summary>Will auto‑isolation take down my production servers?</summary>
+            <p>Not by default. The "Servers: alert only" setting is on out of the box. Servers raise a critical "Compromise detected" alert and you isolate them with one click when you choose to.</p>
+          </details>
+          <details>
+            <summary>What happens if my Shield360 server goes offline?</summary>
+            <p>Endpoints keep enforcing their last policy and still isolate themselves when a trigger fires — the decision happens on the agent. When the server returns, everything reconciles on the next check‑in.</p>
+          </details>
+          <details>
+            <summary>What does the install script actually do?</summary>
+            <p>It checks for Node.js 22.13+ (installing the LTS with winget if missing), downloads the release package from shield360.biz, verifies its SHA‑256 checksum, extracts it to <code>C:\Shield360 Endpoint</code>, creates an HTTPS certificate and registers the server to start automatically. Upgrades keep your config and data. <a class="text-link" href="install.ps1" target="_blank" rel="noopener">Read the script</a> before you run it.</p>
+          </details>
+          <details>
+            <summary>How do I pilot a policy safely?</summary>
+            <p>Use <b>Report only</b> mode. The agent measures compliance for every setting but changes nothing, and raises alerts instead of isolating. Switch to Enforce when you're happy.</p>
+          </details>
+          <details>
+            <summary>Does it work alongside Group Policy or Intune?</summary>
+            <p>Yes. Settings managed by GPO or Intune take precedence, and Shield360 shows them as non‑compliant so you can see exactly where policies disagree.</p>
+          </details>
+          <details>
+            <summary>Can the server run arbitrary commands on endpoints?</summary>
+            <p>No. Remote actions come from a fixed allow‑list — scans, signature updates, process and connection listings, restarts with a two‑minute user warning, isolation and the response actions. Nothing else.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CTA ============ -->
+    <section class="cta">
+      <div class="wrap">
+        <div class="cta-card reveal">
+          <div class="cta-glow" aria-hidden="true"></div>
+          <svg class="cta-mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#s360-mark"/></svg>
+          <h2>Take back <span class="serif">every endpoint.</span></h2>
+          <p>Self‑hosted. Dependency‑free. Ready in minutes.</p>
+          <div class="hero-ctas center">
+            <a href="#deploy" class="btn btn-primary btn-lg">Get started <span class="arrow">→</span></a>
+            <a href="mailto:sales@shield360.biz?subject=Shield360%20Endpoint%20enquiry" class="btn btn-ghost btn-lg">Contact sales</a>
+          </div>
+          <p class="cta-mail">Questions about licensing or a rollout? Email <a href="mailto:sales@shield360.biz">sales@shield360.biz</a></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap foot-inner">
+      <div class="foot-brand">
+        <a href="#top" class="brand">
+          <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#s360-mark"/></svg>
+          <span><span class="wordmark">Shield<b>360</b></span> <em>Endpoint</em></span>
+        </a>
+        <p>Endpoint monitoring and security posture for Windows Servers and PCs.</p>
+      </div>
+      <div class="foot-cols">
+        <div><h5>Product</h5><a href="#visibility">Visibility</a><a href="#protection">Protection</a><a href="#isolation">Isolation</a><a href="#security">Security</a></div>
+        <div><h5>Get started</h5><a href="#deploy">Deploy</a><a href="#deploy">Requirements</a><a href="#faq">FAQ</a></div>
+        <div><h5>Contact</h5><a href="mailto:sales@shield360.biz">sales@shield360.biz</a></div>
+      </div>
+    </div>
+    <div class="wrap foot-base">
+      <span>© <span id="yr"></span> Shield360 Endpoint</span>
+      <span class="mono">v1 · built for Windows</span>
+    </div>
+  </footer>
+
+  <script src="download/latest.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

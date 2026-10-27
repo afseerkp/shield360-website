@@ -1,0 +1,12 @@
+# OS / editor
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+
+# never commit server secrets if copied here by mistake
+config.json
+data/
+*.pfx
+*.key
+*.pem
