@@ -52,6 +52,15 @@ function Install-Shield360Server {
         throw 'Run this installer from an elevated (Administrator) PowerShell.'
     }
 
+    # This installer runs through iex, which the execution policy does not block, but the .ps1 files it
+    # calls below are blocked under the Windows default 'Restricted' policy. Allow scripts for this
+    # PowerShell session only; the machine's policy is left unchanged.
+    try { Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force -ErrorAction Stop } catch { }
+    if ((Get-ExecutionPolicy) -in 'Restricted', 'AllSigned', 'Default') {
+        throw ("PowerShell scripts are blocked by an execution policy set through Group Policy ($(Get-ExecutionPolicy)). " +
+               'Ask your administrator to allow RemoteSigned for this server, then run the installer again.')
+    }
+
     # ---- Node.js ---------------------------------------------------------------
     Step 'Checking Node.js'
     $node = (Get-Command node.exe -ErrorAction SilentlyContinue).Source
@@ -135,5 +144,11 @@ function Install-Shield360Server {
     Write-Host ''
 }
 
-Install-Shield360Server -InstallDir $InstallDir -DnsName $DnsName -Port $Port -NoTls $NoTls `
-    -SkipNodeInstall $SkipNodeInstall -BaseUrl $BaseUrl
+$previousPolicy = Get-ExecutionPolicy -Scope Process
+try {
+    Install-Shield360Server -InstallDir $InstallDir -DnsName $DnsName -Port $Port -NoTls $NoTls `
+        -SkipNodeInstall $SkipNodeInstall -BaseUrl $BaseUrl
+} finally {
+    # Put the session's policy back so the caller's window behaves as before.
+    try { Set-ExecutionPolicy -Scope Process -ExecutionPolicy $previousPolicy -Force -ErrorAction Stop } catch { }
+}

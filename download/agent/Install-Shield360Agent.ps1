@@ -51,10 +51,16 @@ if ($existing) {
 foreach ($dir in $InstallDir, $DataDir) {
     if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
 }
-# Only SYSTEM and Administrators may read the agent key or modify the agent.
+# Only SYSTEM and Administrators may read the agent key or modify the agent. The folder gets inheritable
+# grants and everything already inside (on upgrade) is reset to inherit them. (/T together with
+# /inheritance:r can leave existing files with no access at all - not even for SYSTEM.)
 foreach ($dir in $InstallDir, $DataDir) {
-    & icacls.exe $dir /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' /T /Q | Out-Null
+    & icacls.exe $dir /inheritance:r /grant:r '*S-1-5-18:(OI)(CI)F' '*S-1-5-32-544:(OI)(CI)F' /Q | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "Failed to set permissions on $dir" }
+    if (Get-ChildItem -LiteralPath $dir -Force | Select-Object -First 1) {
+        & icacls.exe (Join-Path $dir '*') /reset /T /C /Q | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw "Failed to reset permissions inside $dir" }
+    }
 }
 
 $localAgent = Join-Path $PSScriptRoot 'Shield360Agent.ps1'
