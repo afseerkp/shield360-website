@@ -72,12 +72,16 @@ if ($keep -and (Split-Path $keep -Leaf) -ne $zipName) { Move-Item $keep (Join-Pa
 elseif ($keep) { Remove-Item $keep -Force }
 
 Copy-Item (Join-Path $root 'agent\*.ps1') (Join-Path $out 'agent')
+# Served as https://shield360.biz/uninstall.ps1 (irm ... | iex), next to install.ps1.
+Copy-Item (Join-Path $root 'server\Uninstall-Shield360Server.ps1') (Join-Path $PSScriptRoot 'uninstall.ps1') -Force
 
 $sums = Get-ChildItem $out -File -Recurse | Sort-Object FullName | ForEach-Object {
     $rel = $_.FullName.Substring($out.Length + 1).Replace('\', '/')
     '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $rel
 }
-$sums += '{0}  ../install.ps1' -f (Get-FileHash (Join-Path $PSScriptRoot 'install.ps1') -Algorithm SHA256).Hash.ToLower()
+foreach ($s in 'install.ps1', 'uninstall.ps1') {
+    $sums += '{0}  ../{1}' -f (Get-FileHash (Join-Path $PSScriptRoot $s) -Algorithm SHA256).Hash.ToLower(), $s
+}
 [IO.File]::WriteAllLines((Join-Path $out 'SHA256SUMS.txt'), $sums)
 
 $zipItem = Get-Item $zipPath
