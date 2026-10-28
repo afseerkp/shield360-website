@@ -23,7 +23,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
-$AgentVersion = '1.3.0'
+$AgentVersion = '1.4.0'
 $DataDir = if ($env:SHIELD360_DATA_DIR) { $env:SHIELD360_DATA_DIR } else { Join-Path $env:ProgramData 'Shield360' }
 $ConfigFile = Join-Path $DataDir 'config.json'
 $StateFile = Join-Path $DataDir 'state.json'
@@ -322,7 +322,7 @@ function Read-AgentState {
     $script:State = @{ policy = $null; iocs = $null; isolated = $false; blockedIps = @(); lastEventScan = $null
                        quarantine = @(); appliedExclusions = @(); lastQuickScanTrigger = $null
                        isolationReason = $null; serverIps = @(); seenThreats = @(); threatsBaselined = $false
-                       lastSignatureAttempt = $null }
+                       lastSignatureAttempt = $null; uninstallProtection = $null; remoteUninstallTokenHash = $null }
     if (Test-Path $StateFile) {
         try {
             $saved = Get-Content $StateFile -Raw | ConvertFrom-Json
@@ -330,6 +330,11 @@ function Read-AgentState {
         } catch { Write-Log "State file unreadable, starting fresh: $($_.Exception.Message)" 'WARN' }
     }
     foreach ($k in 'blockedIps', 'quarantine', 'appliedExclusions', 'serverIps', 'seenThreats') { $script:State[$k] = @($script:State[$k] | Where-Object { $_ }) }
+}
+
+function Get-Sha256Hex([string]$Text) {
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try { -join ($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($Text)) | ForEach-Object { $_.ToString('x2') }) } finally { $sha.Dispose() }
 }
 
 function Save-AgentState {
@@ -1122,6 +1127,26 @@ function Invoke-AgentAction([string]$Action, $Params) {
             Remove-BlockedIp ([string]$Params.ip)
             return "Removed $($Params.ip) from the brute-force block list."
         }
+        'uninstall_agent' {
+            # Runs the uninstaller as a separate one-time SYSTEM task in 20 seconds, so this agent can report
+            # the result first and the uninstaller is not stopped together with the agent's own task.
+            $uninstaller = Join-Path $env:SystemRoot 'Temp\Shield360-Uninstall.ps1'
+            $local = Join-Path $PSScriptRoot 'Uninstall-Shield360Agent.ps1'
+            if (Test-Path $local) { Copy-Item $local $uninstaller -Force }
+            else {
+                Invoke-WebRequest -Uri ($script:Config.serverUrl.TrimEnd('/') + '/download/Uninstall-Shield360Agent.ps1') -OutFile $uninstaller -UseBasicParsing
+            }
+            # One-time token: lets this console-initiated uninstall pass uninstall protection.
+            $token = [guid]::NewGuid().ToString('N') + [guid]::NewGuid().ToString('N')
+            $script:State.remoteUninstallTokenHash = Get-Sha256Hex $token
+            Save-AgentState
+            $ps = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+            $taskAction = New-ScheduledTaskAction -Execute $ps -Argument "-NoProfile -NonInteractive -ExecutionPolicy Bypass -File `"$uninstaller`" -RemoteToken $token"
+            Register-ScheduledTask -TaskName 'Shield360 Uninstall' -TaskPath '\Shield360\' -Action $taskAction `
+                -Trigger (New-ScheduledTaskTrigger -Once -At (Get-Date).AddSeconds(20)) `
+                -Principal (New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest) -Force | Out-Null
+            return 'Uninstall started. The agent removes itself within a minute, restores USB, network and website settings, and the endpoint then disappears from the console.'
+        }
         'isolate' { return Enable-Isolation }
         'release_isolation' { return Disable-Isolation }
         'defender_quick_scan' {
@@ -1251,6 +1276,11 @@ function Start-AgentLoop {
             $failures = 0
             if ($resp.interval) { $interval = [math]::Max(15, [int]$resp.interval) }
             $script:Definitions = $resp.definitions
+            # The uninstaller reads this from state.json to decide whether a local uninstall needs the code.
+            if ($resp.uninstallProtection -and (ConvertTo-Json $resp.uninstallProtection -Compress) -ne (ConvertTo-Json $script:State.uninstallProtection -Compress)) {
+                $script:State.uninstallProtection = $resp.uninstallProtection
+                Save-AgentState
+            }
 
             if ($resp.policy) {
                 Write-Log "Received protection policy '$($resp.policy.name)' ($($resp.policy.version))"

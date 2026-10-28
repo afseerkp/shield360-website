@@ -70,6 +70,16 @@ if ($PSScriptRoot -and (Test-Path $localAgent)) {
     Invoke-WebRequest -Uri "$ServerUrl/download/Shield360Agent.ps1" -OutFile $AgentPath -UseBasicParsing
 }
 Unblock-File $AgentPath
+
+# Keep the uninstaller next to the agent for local uninstalls (C:\Program Files\Shield360\Uninstall-Shield360Agent.ps1).
+$uninstallPath = Join-Path $InstallDir 'Uninstall-Shield360Agent.ps1'
+$localUninstall = Join-Path $PSScriptRoot 'Uninstall-Shield360Agent.ps1'
+if ($PSScriptRoot -and (Test-Path $localUninstall)) {
+    Copy-Item $localUninstall $uninstallPath -Force
+} else {
+    Invoke-WebRequest -Uri "$ServerUrl/download/Uninstall-Shield360Agent.ps1" -OutFile $uninstallPath -UseBasicParsing
+}
+Unblock-File $uninstallPath
 Write-Host "  Agent installed to $InstallDir"
 
 $ps = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
