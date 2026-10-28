@@ -4,7 +4,7 @@
     Builds the files served from https://shield360.biz/download/.
 
 .DESCRIPTION
-    Packages the server and agent into download\shield360-endpoint-<version>.zip,
+    Packages the server and agent into download\shield360-endpoint-<version>-<fingerprint>.zip,
     copies the agent scripts for offline download, and writes latest.json and
     SHA256SUMS.txt. install.ps1 reads latest.json to find and verify the package.
 
@@ -33,6 +33,13 @@ $include = @(
     'server\src\*', 'server\public\*'
 )
 
+# Keep the newest previous package: a browser or CDN may still serve the old latest.json for a few
+# minutes after a release, and its download link must keep working.
+$previous = Get-ChildItem $out -Filter 'shield360-endpoint-*.zip' -ErrorAction SilentlyContinue |
+    Sort-Object LastWriteTime -Descending | Select-Object -First 1
+$keep = $null
+if ($previous) { $keep = Join-Path $env:TEMP $previous.Name; Copy-Item $previous.FullName $keep -Force }
+
 if (Test-Path $out) { Remove-Item $out -Recurse -Force }
 New-Item -ItemType Directory (Join-Path $out 'agent') -Force | Out-Null
 
@@ -45,9 +52,8 @@ foreach ($f in $files) {
     if ($rel -match '^server\\(data|node_modules)\\' -or $rel -eq 'server\config.json') { throw "Refusing to package $rel" }
 }
 
-$zipName = "shield360-endpoint-$version.zip"
-$zipPath = Join-Path $out $zipName
-$zip = [IO.Compression.ZipFile]::Open($zipPath, 'Create')
+$buildPath = Join-Path $out 'build.zip'
+$zip = [IO.Compression.ZipFile]::Open($buildPath, 'Create')
 try {
     foreach ($f in $files) {
         # Forward slashes so the archive extracts correctly everywhere.
@@ -55,6 +61,15 @@ try {
         [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $f.FullName, $entry, 'Optimal') | Out-Null
     }
 } finally { $zip.Dispose() }
+
+# Every build gets a unique name (version + content fingerprint). A file name is never reused for
+# different content, so a CDN can never serve a cached package that doesn't match latest.json.
+$fingerprint = (Get-FileHash $buildPath -Algorithm SHA256).Hash.Substring(0, 8).ToLower()
+$zipName = "shield360-endpoint-$version-$fingerprint.zip"
+$zipPath = Join-Path $out $zipName
+Move-Item $buildPath $zipPath
+if ($keep -and (Split-Path $keep -Leaf) -ne $zipName) { Move-Item $keep (Join-Path $out (Split-Path $keep -Leaf)) }
+elseif ($keep) { Remove-Item $keep -Force }
 
 Copy-Item (Join-Path $root 'agent\*.ps1') (Join-Path $out 'agent')
 

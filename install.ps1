@@ -84,19 +84,30 @@ function Install-Shield360Server {
     Write-Host "    Node.js $(& $node --version)"
 
     # ---- Download and verify ---------------------------------------------------
+    # A unique query string makes the website's CDN fetch current files instead of a cached copy,
+    # which could otherwise be a few minutes older than latest.json right after a release.
+    function Fresh([string]$Path) { "$BaseUrl/download/$Path`?t=$([DateTime]::UtcNow.Ticks)" }
+
     Step "Fetching release information from $BaseUrl"
-    $release = Invoke-RestMethod -Uri "$BaseUrl/download/latest.json" -UseBasicParsing
+    $release = Invoke-RestMethod -Uri (Fresh 'latest.json') -UseBasicParsing
     Write-Host "    Shield360 Endpoint $($release.version) ($([math]::Round($release.size / 1KB)) KB)"
 
     $tmp = Join-Path $env:TEMP ("shield360-" + [guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory $tmp | Out-Null
     try {
-        $zip = Join-Path $tmp $release.file
         Step 'Downloading package'
-        Invoke-WebRequest -Uri "$BaseUrl/download/$($release.file)" -OutFile $zip -UseBasicParsing
-        $hash = (Get-FileHash $zip -Algorithm SHA256).Hash
-        if ($hash -ne $release.sha256.ToUpper()) {
-            throw "Checksum mismatch for $($release.file). Expected $($release.sha256), got $hash. Nothing was installed."
+        for ($attempt = 1; ; $attempt++) {
+            $zip = Join-Path $tmp $release.file
+            Invoke-WebRequest -Uri (Fresh $release.file) -OutFile $zip -UseBasicParsing
+            $hash = (Get-FileHash $zip -Algorithm SHA256).Hash
+            if ($hash -eq $release.sha256.ToUpper()) { break }
+            if ($attempt -ge 2) {
+                throw ("Checksum mismatch for $($release.file). Expected $($release.sha256), got $hash. Nothing was installed. " +
+                       'If a new version was published in the last few minutes, wait 10 minutes and run the installer again.')
+            }
+            Write-Host '    Checksum did not match (release may be updating); retrying in 15 seconds...' -ForegroundColor Yellow
+            Start-Sleep -Seconds 15
+            $release = Invoke-RestMethod -Uri (Fresh 'latest.json') -UseBasicParsing
         }
         Write-Host '    SHA-256 verified'
 
