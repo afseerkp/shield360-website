@@ -132,13 +132,10 @@ function Install-Shield360Server {
     }
 
     # ---- HTTPS -----------------------------------------------------------------
+    # Only a fresh installation (no config.json yet) gets a certificate. An existing configuration is
+    # left as it is: a server running plain HTTP behind Cloudflare or another proxy must stay that way.
     $configPath = Join-Path $serverDir 'config.json'
-    $hasTls = $false
-    if (Test-Path $configPath) {
-        $cfg = Get-Content $configPath -Raw | ConvertFrom-Json
-        $hasTls = [bool]($cfg.tls -and ($cfg.tls.pfx -or $cfg.tls.cert))
-    }
-    if (-not $NoTls -and -not $hasTls) {
+    if (-not $NoTls -and -not (Test-Path $configPath)) {
         Step 'Creating self-signed HTTPS certificate'
         $certArgs = @{ Port = $Port }
         if ($DnsName) { $certArgs.DnsName = $DnsName }
