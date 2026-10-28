@@ -23,7 +23,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
-$AgentVersion = '1.6.0'
+$AgentVersion = '1.7.0'
 $DataDir = if ($env:SHIELD360_DATA_DIR) { $env:SHIELD360_DATA_DIR } else { Join-Path $env:ProgramData 'Shield360' }
 $ConfigFile = Join-Path $DataDir 'config.json'
 $StateFile = Join-Path $DataDir 'state.json'
@@ -324,7 +324,7 @@ function Read-AgentState {
                        quarantine = @(); appliedExclusions = @(); appliedCfaApps = @(); appliedCfaFolders = @(); lastQuickScanTrigger = $null
                        isolationReason = $null; serverIps = @(); seenThreats = @(); threatsBaselined = $false
                        lastSignatureAttempt = $null; uninstallProtection = $null; remoteUninstallTokenHash = $null
-                       lastRestorePointAttempt = $null }
+                       lastRestorePointAttempt = $null; lastUpdateAttempt = $null }
     if (Test-Path $StateFile) {
         try {
             $saved = Get-Content $StateFile -Raw | ConvertFrom-Json
@@ -868,6 +868,42 @@ function Invoke-OneDrivePolicy($Od, $Checks, [bool]$Apply) {
         Add-Check $Checks 'Recovery' 'OneDrive folder protection (Desktop, Documents, Pictures)' 'On' $(
             if ((Get-RegValue $key 'KFMSilentOptIn') -eq $Od.tenantId) { 'On' } else { 'Off' })
     }
+}
+
+# ------------------------------------------------------------------ self-update
+
+# Installs a newer agent offered by the server. Only the known agent files are accepted; each one must
+# match the SHA-256 sent in the authenticated check-in reply and parse as valid PowerShell before any
+# file is replaced. Returns $true when the agent should exit so the scheduled task starts the new version.
+function Invoke-AgentUpdate($Update, [string]$InstallDir = $PSScriptRoot) {
+    if (-not ($Update -and $Update.version)) { return $false }
+    if ([version]$Update.version -le [version]$AgentVersion) { return $false }
+    $last = $script:State.lastUpdateAttempt
+    if ($last -and $last.version -eq $Update.version -and ((Get-Date) - [datetime]$last.time).TotalMinutes -lt 60) { return $false }
+    $script:State.lastUpdateAttempt = @{ version = $Update.version; time = (Get-Date).ToString('o') }
+    Save-AgentState
+
+    $allowed = 'Shield360Agent.ps1', 'Uninstall-Shield360Agent.ps1'
+    $files = @($Update.files | Where-Object { $allowed -contains $_.name })
+    if (-not ($files | Where-Object { $_.name -eq 'Shield360Agent.ps1' })) { throw 'Update does not contain the agent.' }
+    $staging = Join-Path $DataDir 'update'
+    if (Test-Path $staging) { Remove-Item $staging -Recurse -Force }
+    New-Item -ItemType Directory -Path $staging -Force | Out-Null
+    try {
+        foreach ($f in $files) {
+            $dest = Join-Path $staging $f.name
+            Invoke-WebRequest -Uri ($script:Config.serverUrl.TrimEnd('/') + '/download/' + $f.name) -OutFile $dest -UseBasicParsing -TimeoutSec 120
+            if ((Get-FileHash -LiteralPath $dest -Algorithm SHA256).Hash -ne ([string]$f.sha256).ToUpper()) { throw "Checksum mismatch for $($f.name)." }
+            $errors = $null
+            [void][System.Management.Automation.Language.Parser]::ParseFile($dest, [ref]$null, [ref]$errors)
+            if ($errors.Count) { throw "$($f.name) is not a valid script ($($errors[0].Message))." }
+        }
+        foreach ($f in $files) { Copy-Item (Join-Path $staging $f.name) (Join-Path $InstallDir $f.name) -Force }
+    } finally {
+        Remove-Item $staging -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    Write-Log "Agent updated from $AgentVersion to $($Update.version); restarting with the new version"
+    return $true
 }
 
 function Invoke-PolicyEnforcement {
@@ -1427,6 +1463,15 @@ function Start-AgentLoop {
                     Write-Log "Action '$($cmd.action)' failed: $($_.Exception.Message)" 'ERROR'
                 }
                 Invoke-S360Api -Path "/api/agent/commands/$($cmd.id)/result" -Body $result | Out-Null
+            }
+
+            # Self-update: after replacing the files this process exits; the task's watchdog trigger
+            # (every 5 minutes) starts the new version. Isolation and firewall rules stay in place meanwhile.
+            if ($resp.agentUpdate) {
+                $updated = $false
+                try { $updated = Invoke-AgentUpdate $resp.agentUpdate }
+                catch { Write-Log "Agent update to $($resp.agentUpdate.version) failed: $($_.Exception.Message)" 'ERROR' }
+                if ($updated) { exit 0 }
             }
 
             if ((Get-Date) -ge $nextInventory) {
