@@ -101,6 +101,12 @@ try {
             Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Services\USBSTOR' -Name 'Start' -Value 3 -Type DWord
             Write-Host 'USB storage access restored.'
         }
+        if ($o.OneDriveManaged -eq 1) {
+            foreach ($n in 'KFMSilentOptIn', 'KFMSilentOptInWithNotification', 'KFMBlockOptOut') {
+                Remove-ItemProperty 'HKLM:\SOFTWARE\Policies\Microsoft\OneDrive' -Name $n -ErrorAction SilentlyContinue
+            }
+            Write-Host 'OneDrive folder protection policy removed (files already in OneDrive stay there).'
+        }
         $browsers = @{
             Web_Edge    = 'HKLM:\SOFTWARE\Policies\Microsoft\Edge\URLBlocklist'
             Web_Chrome  = 'HKLM:\SOFTWARE\Policies\Google\Chrome\URLBlocklist'

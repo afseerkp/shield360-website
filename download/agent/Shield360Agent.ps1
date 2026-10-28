@@ -23,7 +23,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
-$AgentVersion = '1.5.0'
+$AgentVersion = '1.6.0'
 $DataDir = if ($env:SHIELD360_DATA_DIR) { $env:SHIELD360_DATA_DIR } else { Join-Path $env:ProgramData 'Shield360' }
 $ConfigFile = Join-Path $DataDir 'config.json'
 $StateFile = Join-Path $DataDir 'state.json'
@@ -224,6 +224,7 @@ function Get-SecurityPosture {
         (Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp').UserAuthentication -eq 1
     }
     $sec.usbStorageState = Invoke-Safely { Get-UsbStorageState }
+    $sec.recovery = Invoke-Safely { Get-RecoveryStatus }
     # USB drives currently plugged in (shown to the admin; useful when deciding on USB policy).
     $sec.usbDevices = @(Invoke-Safely {
         Get-CimInstance Win32_DiskDrive -Filter "InterfaceType = 'USB'" | ForEach-Object {
@@ -322,7 +323,8 @@ function Read-AgentState {
     $script:State = @{ policy = $null; iocs = $null; isolated = $false; blockedIps = @(); lastEventScan = $null
                        quarantine = @(); appliedExclusions = @(); appliedCfaApps = @(); appliedCfaFolders = @(); lastQuickScanTrigger = $null
                        isolationReason = $null; serverIps = @(); seenThreats = @(); threatsBaselined = $false
-                       lastSignatureAttempt = $null; uninstallProtection = $null; remoteUninstallTokenHash = $null }
+                       lastSignatureAttempt = $null; uninstallProtection = $null; remoteUninstallTokenHash = $null
+                       lastRestorePointAttempt = $null }
     if (Test-Path $StateFile) {
         try {
             $saved = Get-Content $StateFile -Raw | ConvertFrom-Json
@@ -780,6 +782,94 @@ function Invoke-WebFilterPolicy([string[]]$Sites, $Checks, [bool]$Apply) {
     Add-Check $Checks 'Web filtering' 'Blocked websites system-wide (hosts file)' "$($Sites.Count) sites" "$hosts sites"
 }
 
+# ------------------------------------------------------------------ recovery (restore points, backups, OneDrive)
+
+# Newest Windows shadow copy (restore point) per drive letter.
+function Get-RestorePoints {
+    $letters = @{}
+    Get-CimInstance Win32_Volume | Where-Object { $_.DriveLetter } | ForEach-Object { $letters[$_.DeviceID] = $_.DriveLetter }
+    @(Get-CimInstance Win32_ShadowCopy | Group-Object VolumeName | ForEach-Object {
+        $newest = ($_.Group | Sort-Object InstallDate -Descending | Select-Object -First 1).InstallDate
+        @{ drive = $(if ($letters[$_.Name]) { $letters[$_.Name] } else { $_.Name }); count = $_.Count; newest = ConvertTo-IsoDate $newest }
+    })
+}
+
+# What this endpoint could be recovered from: restore points, Windows Server Backup, OneDrive-redirected folders.
+function Get-RecoveryStatus {
+    $r = @{}
+    $r.restorePoints = @(Invoke-Safely { Get-RestorePoints } @())
+    $r.windowsBackup = Invoke-Safely {
+        $e = Get-WinEvent -FilterHashtable @{ LogName = 'Microsoft-Windows-Backup'; Id = 4 } -MaxEvents 1
+        @{ lastSuccess = ConvertTo-IsoDate $e.TimeCreated }
+    }
+    # Signed-in users whose Desktop and Documents live in OneDrive (Known Folder Move).
+    $r.oneDriveUsers = @(Invoke-Safely {
+        Get-ChildItem Registry::HKEY_USERS -ErrorAction SilentlyContinue | Where-Object { $_.PSChildName -match '^S-1-5-21-[\d-]+$' } | ForEach-Object {
+            $sid = $_.PSChildName
+            $sf = Get-ItemProperty "Registry::HKEY_USERS\$sid\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders" -ErrorAction SilentlyContinue
+            if ($sf) {
+                $name = Invoke-Safely { (New-Object Security.Principal.SecurityIdentifier $sid).Translate([Security.Principal.NTAccount]).Value } $sid
+                @{ user = $name; documents = [bool]($sf.Personal -match 'OneDrive'); desktop = [bool]($sf.Desktop -match 'OneDrive') }
+            }
+        }
+    } @())
+    $r
+}
+
+# Creates a restore point of each configured drive when the newest one is older than the interval.
+# Users restore files from them with File Explorer > Properties > Previous Versions.
+function Invoke-RestorePointPolicy($Rp, $Checks, [bool]$Apply) {
+    if (-not ($Rp -and $Rp.enabled)) { return }
+    $hours = [math]::Max(1, [int]$Rp.intervalHours)
+    $existing = @{}
+    try { foreach ($p in @(Get-RestorePoints)) { $existing[[string]$p.drive] = $p } }
+    catch {
+        foreach ($drive in @($Rp.drives | Where-Object { $_ })) {
+            Add-Check $Checks 'Recovery' "Restore point of $drive within $(2 * $hours) hours" 'Yes' 'Unknown (no access to restore points)' $false
+        }
+        return
+    }
+    $lastTry = $(if ($script:State.lastRestorePointAttempt) { [datetime]$script:State.lastRestorePointAttempt } else { [datetime]::MinValue })
+    foreach ($drive in @($Rp.drives | Where-Object { $_ })) {
+        $newest = $(if ($existing[$drive]) { [datetime]$existing[$drive].newest } else { [datetime]::MinValue })
+        $due = ((Get-Date) - $newest).TotalHours -ge $hours
+        if ($Apply -and $due -and ((Get-Date) - $lastTry).TotalMinutes -ge 30 -and (Test-Path "$drive\")) {
+            $res = Invoke-CimMethod -ClassName Win32_ShadowCopy -MethodName Create -Arguments @{ Volume = "$drive\"; Context = 'ClientAccessible' }
+            if ($res.ReturnValue -eq 0) { $newest = Get-Date; Write-Log "Created restore point of $drive" }
+            else { Write-Log "Could not create a restore point of $drive (code $($res.ReturnValue))" 'WARN' }
+            $script:State.lastRestorePointAttempt = (Get-Date).ToString('o')
+        }
+        $age = ((Get-Date) - $newest).TotalHours
+        Add-Check $Checks 'Recovery' "Restore point of $drive within $(2 * $hours) hours" 'Yes' $(
+            if ($newest -eq [datetime]::MinValue) { 'None' } elseif ($age -le 2 * $hours) { 'Yes' } else { "$([math]::Round($age)) hours old" })
+    }
+}
+
+# OneDrive Known Folder Move: silently moves users' Desktop, Documents and Pictures into OneDrive so
+# Microsoft 365 can restore them. Workstations only. Only values Shield360 set are removed again.
+function Invoke-OneDrivePolicy($Od, $Checks, [bool]$Apply) {
+    $key = 'HKLM:\SOFTWARE\Policies\Microsoft\OneDrive'
+    $managed = (Get-RegValue $OwnerKey 'OneDriveManaged') -eq 1
+    $isWorkstation = (Get-CimInstance Win32_OperatingSystem).ProductType -eq 1
+    $want = $Od -and $Od.enabled -and $Od.tenantId -and $isWorkstation
+    if ($Apply) {
+        if ($want) {
+            if (-not (Test-Path $key)) { New-Item -Path $key -Force | Out-Null }
+            Set-ItemProperty -Path $key -Name 'KFMSilentOptIn' -Value ([string]$Od.tenantId) -Type String
+            Set-DwordValue $key 'KFMSilentOptInWithNotification' 0
+            Set-DwordValue $key 'KFMBlockOptOut' $(if ($Od.blockOptOut) { 1 } else { 0 })
+            Set-OwnedValue 'OneDriveManaged' 1 'DWord'
+        } elseif ($managed) {
+            foreach ($n in 'KFMSilentOptIn', 'KFMSilentOptInWithNotification', 'KFMBlockOptOut') { Remove-ItemProperty -Path $key -Name $n -ErrorAction SilentlyContinue }
+            Set-OwnedValue 'OneDriveManaged' $null
+        }
+    }
+    if ($want) {
+        Add-Check $Checks 'Recovery' 'OneDrive folder protection (Desktop, Documents, Pictures)' 'On' $(
+            if ((Get-RegValue $key 'KFMSilentOptIn') -eq $Od.tenantId) { 'On' } else { 'Off' })
+    }
+}
+
 function Invoke-PolicyEnforcement {
     $policy = $script:State.policy
     if (-not $policy) { return }
@@ -791,6 +881,8 @@ function Invoke-PolicyEnforcement {
         @{ name = 'hardening'; run = { Invoke-HardeningPolicy $policy.hardening $checks $apply } }
         @{ name = 'USB control'; run = { Invoke-UsbPolicy ([string]$policy.deviceControl.usbStorage) $checks $apply } }
         @{ name = 'website blocking'; run = { Invoke-WebFilterPolicy @($policy.webFilter.blockedSites | Where-Object { $_ }) $checks $apply } }
+        @{ name = 'restore points'; run = { Invoke-RestorePointPolicy $policy.recovery.restorePoints $checks $apply } }
+        @{ name = 'OneDrive folder protection'; run = { Invoke-OneDrivePolicy $policy.recovery.oneDrive $checks $apply } }
     )) {
         try { & $step.run } catch { Write-Log "Policy step '$($step.name)' failed: $($_.Exception.Message)" 'ERROR' }
     }
