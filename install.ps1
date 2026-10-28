@@ -150,7 +150,7 @@ function Install-Shield360Server {
     & (Join-Path $serverDir 'Install-Shield360Server.ps1')
 
     Write-Host ''
-    Write-Host '  Done. Sign in as admin, change the initial password, then delete the password file.' -ForegroundColor Green
+    Write-Host '  Done. Sign in as admin with the password above; you will be asked to set your own password.' -ForegroundColor Green
     Write-Host '  Next: open Deploy agent in the console to enroll your endpoints.'
     Write-Host ''
 }
