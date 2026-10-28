@@ -23,7 +23,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
-$AgentVersion = '1.4.0'
+$AgentVersion = '1.5.0'
 $DataDir = if ($env:SHIELD360_DATA_DIR) { $env:SHIELD360_DATA_DIR } else { Join-Path $env:ProgramData 'Shield360' }
 $ConfigFile = Join-Path $DataDir 'config.json'
 $StateFile = Join-Path $DataDir 'state.json'
@@ -320,7 +320,7 @@ function Get-Inventory {
 
 function Read-AgentState {
     $script:State = @{ policy = $null; iocs = $null; isolated = $false; blockedIps = @(); lastEventScan = $null
-                       quarantine = @(); appliedExclusions = @(); lastQuickScanTrigger = $null
+                       quarantine = @(); appliedExclusions = @(); appliedCfaApps = @(); appliedCfaFolders = @(); lastQuickScanTrigger = $null
                        isolationReason = $null; serverIps = @(); seenThreats = @(); threatsBaselined = $false
                        lastSignatureAttempt = $null; uninstallProtection = $null; remoteUninstallTokenHash = $null }
     if (Test-Path $StateFile) {
@@ -329,7 +329,7 @@ function Read-AgentState {
             foreach ($k in @($script:State.Keys)) { if ($null -ne $saved.$k) { $script:State[$k] = $saved.$k } }
         } catch { Write-Log "State file unreadable, starting fresh: $($_.Exception.Message)" 'WARN' }
     }
-    foreach ($k in 'blockedIps', 'quarantine', 'appliedExclusions', 'serverIps', 'seenThreats') { $script:State[$k] = @($script:State[$k] | Where-Object { $_ }) }
+    foreach ($k in 'blockedIps', 'quarantine', 'appliedExclusions', 'appliedCfaApps', 'appliedCfaFolders', 'serverIps', 'seenThreats') { $script:State[$k] = @($script:State[$k] | Where-Object { $_ }) }
 }
 
 function Get-Sha256Hex([string]$Text) {
@@ -540,6 +540,21 @@ function Invoke-DefenderPolicy($Policy, $Checks, [bool]$Apply) {
         if ($wantEx.Count) { Invoke-Safely { Add-MpPreference -ExclusionPath $wantEx } | Out-Null }
         $script:State.appliedExclusions = $wantEx
 
+        # Controlled folder access (ransomware protection): programs allowed to change protected folders,
+        # and extra folders to protect. Only entries Shield360 added are ever removed again.
+        foreach ($cfa in @(
+            @{ want = @($av.cfaAllowedApps | Where-Object { $_ }); state = 'appliedCfaApps'; param = 'ControlledFolderAccessAllowedApplications' }
+            @{ want = @($av.cfaProtectedFolders | Where-Object { $_ }); state = 'appliedCfaFolders'; param = 'ControlledFolderAccessProtectedFolders' }
+        )) {
+            $stale = @($script:State[$cfa.state] | Where-Object { $cfa.want -notcontains $_ })
+            if ($stale.Count) { Invoke-Safely { $p = @{ $cfa.param = $stale }; Remove-MpPreference @p } | Out-Null }
+            if ($cfa.want.Count) {
+                try { $p = @{ $cfa.param = $cfa.want }; Add-MpPreference @p }
+                catch { Write-Log "Could not set $($cfa.param): $($_.Exception.Message)" 'WARN' }
+            }
+            $script:State[$cfa.state] = $cfa.want
+        }
+
         # Attack surface reduction rules: 0 off, 1 block, 2 audit.
         $current = @{}
         $ids = @($pref.AttackSurfaceReductionRules_Ids); $acts = @($pref.AttackSurfaceReductionRules_Actions)
@@ -562,6 +577,14 @@ function Invoke-DefenderPolicy($Policy, $Checks, [bool]$Apply) {
     if ($av.realTimeProtection) {
         $rtp = (Get-MpComputerStatus).RealTimeProtectionEnabled
         Add-Check $Checks 'Antivirus' 'Real-time protection (effective)' 'On' $(if ($rtp) { 'On' } else { 'Off' })
+    }
+    foreach ($cfa in @(
+        @{ want = @($av.cfaAllowedApps | Where-Object { $_ }); have = @($pref.ControlledFolderAccessAllowedApplications); name = 'Ransomware protection: allowed apps' }
+        @{ want = @($av.cfaProtectedFolders | Where-Object { $_ }); have = @($pref.ControlledFolderAccessProtectedFolders); name = 'Ransomware protection: extra protected folders' }
+    )) {
+        if (-not $cfa.want.Count) { continue }
+        $missing = @($cfa.want | Where-Object { $cfa.have -notcontains $_ })
+        Add-Check $Checks 'Antivirus' $cfa.name "$($cfa.want.Count) configured" $(if ($missing.Count) { "$($missing.Count) missing" } else { "$($cfa.want.Count) configured" })
     }
     $current = @{}
     $ids = @($pref.AttackSurfaceReductionRules_Ids); $acts = @($pref.AttackSurfaceReductionRules_Actions)
@@ -1023,6 +1046,11 @@ function ConvertTo-AttackEvent($E) {
         'Microsoft-Windows-Windows Defender/Operational|1123' {
             return New-S360Event 'ransomware_blocked' 'high' $true "Ransomware protection blocked $($f['Process Name']) from modifying $($f['Path'])" $null $E.TimeCreated $key
         }
+        'Microsoft-Windows-Windows Defender/Operational|1124' {
+            # Audit mode: nothing was blocked. If the program is legitimate, add it to the policy's allowed apps.
+            return New-S360Event 'ransomware_audit' 'warning' $false (
+                "Ransomware protection (audit) would have blocked $($f['Process Name']) from modifying $($f['Path'])") @{ process = $f['Process Name'] } $E.TimeCreated $key
+        }
         'Microsoft-Windows-Windows Defender/Operational|1126' {
             $target = @($f['Domain'], $f['Remote Address'], $f['Path']) | Where-Object { $_ } | Select-Object -First 1
             return New-S360Event 'network_blocked' 'warning' $true "Network protection blocked a connection to $target from $($f['Process Name'])" $null $E.TimeCreated $key
@@ -1055,7 +1083,7 @@ function Get-AttackEvents {
     $queries = @(
         @{ LogName = 'Security'; Id = 1102, 4720, 4728, 4732, 4756 }
         @{ LogName = 'System'; Id = 104, 7045 }
-        @{ LogName = 'Microsoft-Windows-Windows Defender/Operational'; Id = 1015, 1121, 1123, 1126, 5001, 5010, 5012 }
+        @{ LogName = 'Microsoft-Windows-Windows Defender/Operational'; Id = 1015, 1121, 1123, 1124, 1126, 5001, 5010, 5012 }
         # Level 3 = script blocks Windows/AMSI itself flagged as suspicious.
         @{ LogName = 'Microsoft-Windows-PowerShell/Operational'; Id = 4104; Level = 3 }
     )
