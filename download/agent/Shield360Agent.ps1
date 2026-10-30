@@ -23,7 +23,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
-$AgentVersion = '1.7.0'
+$AgentVersion = '1.8.0'
 $DataDir = if ($env:SHIELD360_DATA_DIR) { $env:SHIELD360_DATA_DIR } else { Join-Path $env:ProgramData 'Shield360' }
 $ConfigFile = Join-Path $DataDir 'config.json'
 $StateFile = Join-Path $DataDir 'state.json'
@@ -324,7 +324,7 @@ function Read-AgentState {
                        quarantine = @(); appliedExclusions = @(); appliedCfaApps = @(); appliedCfaFolders = @(); lastQuickScanTrigger = $null
                        isolationReason = $null; serverIps = @(); seenThreats = @(); threatsBaselined = $false
                        lastSignatureAttempt = $null; uninstallProtection = $null; remoteUninstallTokenHash = $null
-                       lastRestorePointAttempt = $null; lastUpdateAttempt = $null }
+                       lastRestorePointAttempt = $null; lastUpdateAttempt = $null; lastProcessScan = $null }
     if (Test-Path $StateFile) {
         try {
             $saved = Get-Content $StateFile -Raw | ConvertFrom-Json
@@ -870,6 +870,120 @@ function Invoke-OneDrivePolicy($Od, $Checks, [bool]$Apply) {
     }
 }
 
+# ------------------------------------------------------------------ EDR telemetry
+
+# SHA-256 and signature of a program file, cached per path and file version.
+$script:FileInfoCache = @{}
+function Get-FileInfo([string]$Path) {
+    if (-not $Path) { return @{} }
+    try { $fi = Get-Item -LiteralPath $Path -Force -ErrorAction Stop } catch { return @{} }
+    $key = "$Path|$($fi.LastWriteTimeUtc.Ticks)|$($fi.Length)"
+    if (-not $script:FileInfoCache.ContainsKey($key)) {
+        if ($script:FileInfoCache.Count -gt 5000) { $script:FileInfoCache = @{} }
+        $hash = Invoke-Safely { (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash }
+        $sig = Invoke-Safely { Get-AuthenticodeSignature -LiteralPath $Path }
+        $signer = $null
+        if ($sig -and $sig.SignerCertificate) {
+            $signer = [regex]::Match($sig.SignerCertificate.Subject, 'CN="?([^,"]+)').Groups[1].Value
+        }
+        $script:FileInfoCache[$key] = @{ sha256 = $hash; signed = [bool]($sig -and $sig.Status -eq 'Valid'); signer = $signer }
+    }
+    $script:FileInfoCache[$key]
+}
+
+function ConvertFrom-HexId([string]$Value) {
+    try { [Convert]::ToInt64(($Value -replace '^0x', ''), 16) } catch { $null }
+}
+
+function New-ProcessRecord($Time, $ProcessId, $ParentId, $Path, $CommandLine, $ParentName, $User) {
+    $info = Get-FileInfo $Path
+    $cmd = [string]$CommandLine
+    if ($cmd.Length -gt 2000) { $cmd = $cmd.Substring(0, 2000) }
+    @{
+        time = ConvertTo-IsoDate $Time; pid = $ProcessId; ppid = $ParentId
+        name = $(if ($Path) { Split-Path $Path -Leaf } else { $null }); path = $Path; cmdline = $cmd
+        parentName = $ParentName; user = $User
+        sha256 = $info.sha256; signed = $info.signed; signer = $info.signer
+    }
+}
+
+# Process starts since the last scan: from Windows process-creation auditing (event 4688, complete),
+# or, where auditing is unavailable, by comparing the running processes with the previous cycle.
+$script:PreviousProcesses = $null
+function Get-ProcessTelemetry {
+    $since = $(if ($script:State.lastProcessScan) { [datetime]$script:State.lastProcessScan } else { (Get-Date).AddMinutes(-5) })
+    $until = Get-Date
+    $records = New-Object System.Collections.ArrayList
+    $audited = @()
+    try { $audited = @(Get-WinEvent -FilterHashtable @{ LogName = 'Security'; Id = 4688; StartTime = $since; EndTime = $until } -MaxEvents 3000) } catch { }
+    foreach ($e in $audited) {
+        $f = Get-EventFields $e
+        $user = $(if ($f['TargetUserName'] -and $f['TargetUserName'] -ne '-') { "$($f['TargetDomainName'])\$($f['TargetUserName'])" } else { "$($f['SubjectDomainName'])\$($f['SubjectUserName'])" })
+        $parent = $(if ($f['ParentProcessName']) { Split-Path $f['ParentProcessName'] -Leaf } else { $null })
+        [void]$records.Add((New-ProcessRecord $e.TimeCreated (ConvertFrom-HexId $f['NewProcessId']) (ConvertFrom-HexId $f['ProcessId']) $f['NewProcessName'] $f['CommandLine'] $parent $user))
+    }
+
+    # Sampling fallback (also keeps its baseline current, so switching sources never floods the server).
+    $now = @{}
+    $running = @(Get-CimInstance Win32_Process)
+    $byPid = @{}
+    foreach ($p in $running) { $byPid[[int]$p.ProcessId] = $p; $now["$($p.ProcessId)|$($p.CreationDate)"] = $p }
+    if (-not $audited.Count -and $script:PreviousProcesses) {
+        foreach ($k in $now.Keys) {
+            if ($script:PreviousProcesses.ContainsKey($k)) { continue }
+            $p = $now[$k]
+            $owner = Invoke-Safely { $o = Invoke-CimMethod -InputObject $p -MethodName GetOwner; if ($o.User) { "$($o.Domain)\$($o.User)" } }
+            $parent = $(if ($byPid[[int]$p.ParentProcessId]) { $byPid[[int]$p.ParentProcessId].Name } else { $null })
+            [void]$records.Add((New-ProcessRecord $p.CreationDate ([int]$p.ProcessId) ([int]$p.ParentProcessId) $p.ExecutablePath $p.CommandLine $parent $owner))
+            if ($records.Count -ge 1000) { break }
+        }
+    }
+    $script:PreviousProcesses = $now
+    $script:State.lastProcessScan = $until.ToString('o')
+    @($records)
+}
+
+# Outbound TCP connections not reported in the last hour (per process, remote address and port).
+$script:SeenConnections = @{}
+function Get-NetworkTelemetry {
+    $now = Get-Date
+    foreach ($k in @($script:SeenConnections.Keys)) { if (($now - $script:SeenConnections[$k]).TotalMinutes -gt 60) { $script:SeenConnections.Remove($k) } }
+    $listening = @{}
+    Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | ForEach-Object { $listening[[int]$_.LocalPort] = $true }
+    $procs = @{}
+    Get-Process | ForEach-Object { $procs[$_.Id] = $_ }
+    $out = New-Object System.Collections.ArrayList
+    foreach ($c in @(Get-NetTCPConnection -State Established -ErrorAction SilentlyContinue)) {
+        if ($c.RemoteAddress -in '127.0.0.1', '::1' -or $listening[[int]$c.LocalPort]) { continue }   # loopback / inbound
+        $key = "$($c.OwningProcess)|$($c.RemoteAddress)|$($c.RemotePort)"
+        if ($script:SeenConnections.ContainsKey($key)) { continue }
+        $script:SeenConnections[$key] = $now
+        $p = $procs[[int]$c.OwningProcess]
+        [void]$out.Add(@{
+            time = $now.ToUniversalTime().ToString('o'); pid = [int]$c.OwningProcess
+            process = $(if ($p) { $p.ProcessName } else { $null }); path = $(if ($p) { Invoke-Safely { $p.Path } } else { $null })
+            remoteIp = [string]$c.RemoteAddress; remotePort = [int]$c.RemotePort; localPort = [int]$c.LocalPort
+        })
+        if ($out.Count -ge 500) { break }
+    }
+    @($out)
+}
+
+# Turns on Windows process-creation auditing with command lines (event 4688), the source of
+# complete process telemetry. Checked by looking for recent events rather than parsing auditpol
+# output, which is translated on non-English Windows.
+function Invoke-EdrPolicy($Edr, $Checks, [bool]$Apply) {
+    if (-not ($Edr -and $Edr.processAuditing)) { return }
+    $key = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\Audit'
+    $recent = { [bool](Invoke-Safely { Get-WinEvent -FilterHashtable @{ LogName = 'Security'; Id = 4688; StartTime = (Get-Date).AddMinutes(-30) } -MaxEvents 1 }) }
+    if ($Apply) {
+        if ((Get-RegValue $key 'ProcessCreationIncludeCmdLine_Enabled') -ne 1) { Set-DwordValue $key 'ProcessCreationIncludeCmdLine_Enabled' 1 }
+        if (-not (& $recent)) { & auditpol.exe /set /subcategory:'{0CCE922B-69AE-11D9-BED3-505054503030}' /success:enable | Out-Null }
+    }
+    $ok = (Get-RegValue $key 'ProcessCreationIncludeCmdLine_Enabled') -eq 1 -and (& $recent)
+    Add-Check $Checks 'EDR' 'Process start auditing with command lines' 'Yes' $(if ($ok) { 'Yes' } else { 'No' })
+}
+
 # ------------------------------------------------------------------ self-update
 
 # Installs a newer agent offered by the server. Only the known agent files are accepted; each one must
@@ -919,6 +1033,7 @@ function Invoke-PolicyEnforcement {
         @{ name = 'website blocking'; run = { Invoke-WebFilterPolicy @($policy.webFilter.blockedSites | Where-Object { $_ }) $checks $apply } }
         @{ name = 'restore points'; run = { Invoke-RestorePointPolicy $policy.recovery.restorePoints $checks $apply } }
         @{ name = 'OneDrive folder protection'; run = { Invoke-OneDrivePolicy $policy.recovery.oneDrive $checks $apply } }
+        @{ name = 'EDR'; run = { Invoke-EdrPolicy $policy.edr $checks $apply } }
     )) {
         try { & $step.run } catch { Write-Log "Policy step '$($step.name)' failed: $($_.Exception.Message)" 'ERROR' }
     }
@@ -1382,6 +1497,8 @@ function Start-AgentLoop {
     $script:LastEnforced = $null
     # Events are kept until the server has accepted them, so nothing is lost while offline.
     $pendingEvents = New-Object System.Collections.ArrayList
+    $pendingProcesses = New-Object System.Collections.ArrayList
+    $pendingConnections = New-Object System.Collections.ArrayList
     if ($script:State.policy) { Invoke-PolicyEnforcement; Invoke-IocEnforcement }
 
     while ($true) {
@@ -1397,6 +1514,19 @@ function Start-AgentLoop {
             catch { Write-Log "$($source.name) failed: $($_.Exception.Message)" 'ERROR' }
         }
         if ($pendingEvents.Count -gt 1000) { $pendingEvents.RemoveRange(0, $pendingEvents.Count - 1000) }
+
+        # EDR telemetry, buffered until the server accepts it (oldest dropped beyond the cap).
+        $edr = $(if ($script:State.policy) { $script:State.policy.edr } else { $null })
+        if ($edr -and $edr.processTelemetry) {
+            try { foreach ($r in @(Get-ProcessTelemetry)) { [void]$pendingProcesses.Add($r) } }
+            catch { Write-Log "Process telemetry failed: $($_.Exception.Message)" 'ERROR' }
+        }
+        if ($edr -and $edr.networkTelemetry) {
+            try { foreach ($r in @(Get-NetworkTelemetry)) { [void]$pendingConnections.Add($r) } }
+            catch { Write-Log "Network telemetry failed: $($_.Exception.Message)" 'ERROR' }
+        }
+        foreach ($buf in $pendingProcesses, $pendingConnections) { if ($buf.Count -gt 5000) { $buf.RemoveRange(0, $buf.Count - 5000) } }
+
         if ($script:State.policy -and (-not $script:LastEnforced -or ((Get-Date) - $script:LastEnforced).TotalMinutes -ge $EnforceEveryMinutes)) {
             Invoke-PolicyEnforcement
             Invoke-IocEnforcement
@@ -1408,12 +1538,15 @@ function Start-AgentLoop {
                 $securityAt = Get-Date
             }
             $sending = @($pendingEvents | Select-Object -First 200)
+            $sendingProcesses = @($pendingProcesses | Select-Object -First 1500)
+            $sendingConnections = @($pendingConnections | Select-Object -First 1500)
             $resp = Invoke-S360Api -Path '/api/agent/checkin' -Body @{
                 agentVersion = $AgentVersion
                 system       = Get-SystemInfo
                 metrics      = Get-Metrics
                 security     = $security
                 events       = $sending
+                telemetry    = @{ processes = $sendingProcesses; connections = $sendingConnections }
                 protection   = @{
                     policyVersion = $(if ($script:State.policy) { $script:State.policy.version } else { $null })
                     policyName    = $(if ($script:State.policy) { $script:State.policy.name } else { $null })
@@ -1428,6 +1561,8 @@ function Start-AgentLoop {
                 }
             }
             if ($sending.Count) { $pendingEvents.RemoveRange(0, $sending.Count) }
+            if ($sendingProcesses.Count) { $pendingProcesses.RemoveRange(0, $sendingProcesses.Count) }
+            if ($sendingConnections.Count) { $pendingConnections.RemoveRange(0, $sendingConnections.Count) }
             if ($failures) { Write-Log "Connection restored after $failures failed attempt(s)" }
             $failures = 0
             if ($resp.interval) { $interval = [math]::Max(15, [int]$resp.interval) }

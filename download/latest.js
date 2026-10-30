@@ -1,1 +1,1 @@
-window.SHIELD360_RELEASE = {"version":"1.10.0","file":"shield360-endpoint-1.10.0-d23b2e42.zip","size":128827,"sha256":"d23b2e42008961f4f16a7ccde06a40a8cf66c5bf525961a5bf6474c8cb5316dc","released":"2026-10-28"};
+window.SHIELD360_RELEASE = {"version":"1.11.0","file":"shield360-endpoint-1.11.0-2430f868.zip","size":137560,"sha256":"2430f868f3b6514ce8ef17ce20b72ca7f55b156882e959a339fa2ea9292bb28c","released":"2026-10-31"};
