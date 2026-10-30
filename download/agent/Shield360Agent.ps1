@@ -23,7 +23,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
-$AgentVersion = '1.8.0'
+$AgentVersion = '1.8.1'
 $DataDir = if ($env:SHIELD360_DATA_DIR) { $env:SHIELD360_DATA_DIR } else { Join-Path $env:ProgramData 'Shield360' }
 $ConfigFile = Join-Path $DataDir 'config.json'
 $StateFile = Join-Path $DataDir 'state.json'
@@ -1635,6 +1635,13 @@ if ($Enroll) {
     Read-AgentState
     Disable-Isolation
     Write-Log 'Network isolation released locally (break-glass).' 'WARN'
+    # Restart the running agent so it doesn't keep its in-memory "isolated" state and re-isolate the PC.
+    $task = Get-ScheduledTask -TaskName 'Shield360 Agent' -TaskPath '\Shield360\' -ErrorAction SilentlyContinue
+    if ($task) {
+        Stop-ScheduledTask -TaskName 'Shield360 Agent' -TaskPath '\Shield360\' -ErrorAction SilentlyContinue
+        Start-ScheduledTask -TaskName 'Shield360 Agent' -TaskPath '\Shield360\' -ErrorAction SilentlyContinue
+    }
+    Write-Host 'Network isolation released. The Shield360 agent was restarted and reports the change to the console.'
 } else {
     Start-AgentLoop
 }
