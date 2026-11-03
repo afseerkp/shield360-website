@@ -1,0 +1,1 @@
+window.FLEETPULSE_RELEASE = {"version":"0.2.0-0c3a8e7","file":"FleetPulse-Client-0.2.0-0c3a8e7.zip","size":74742396,"sha256":"64de144b85251b49773776db2a70aedec3e0ebe50fee2071fdf1882941779997","released":"2026-11-03"};

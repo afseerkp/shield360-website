@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HOT System Agent — install</title>
+  <meta name="description" content="Install the HOT System Agent on a Windows PC with one PowerShell command.">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#0a0b0d">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@700&family=Geist:wght@300..800&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .hot-top { border-bottom: 1px solid var(--line); }
+    .hot-top .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; gap: 16px; }
+    .hot-top .tag { font: 500 13px var(--mono); color: var(--muted); }
+    .hot-hero { padding: 88px 0 56px; }
+    .hot-hero h1 { font-size: clamp(36px, 5.4vw, 64px); letter-spacing: -.04em; line-height: 1.02; max-width: 15ch; }
+    .hot-hero .lead { margin-top: 22px; }
+    .one { margin-top: 36px; max-width: 760px; }
+    .one pre, .hot .code pre { color: var(--text); font-size: 14px; white-space: pre-wrap; word-break: break-all; }
+    .one .code pre { padding: 20px 88px 20px 20px; }
+    .hot { padding: 56px 0; border-top: 1px solid var(--line); }
+    .hot h2 { font-size: clamp(26px, 3vw, 36px); letter-spacing: -.03em; }
+    .hot > .wrap > p { margin-top: 14px; color: var(--muted); max-width: 680px; }
+    .hot-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 28px; counter-reset: s; }
+    .hot-steps li { list-style: none; padding: 22px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--panel); }
+    .hot-steps li::before { counter-increment: s; content: counter(s); display: block; font: 500 13px var(--mono); color: var(--accent); margin-bottom: 10px; }
+    .hot-steps h3 { font-size: 18px; }
+    .hot-steps p { margin-top: 8px; color: var(--muted); font-size: 15px; }
+    .hot-steps, .hot-grid { padding: 0; }
+    .hot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 28px; }
+    .hot-grid > div { display: flex; flex-direction: column; gap: 12px; }
+    .hot-grid h3 { font-size: 17px; }
+    .hot-grid p { color: var(--muted); font-size: 15px; }
+    .hot p code { white-space: nowrap; }
+    .hot .code { margin-top: 4px; }
+    .hot .code pre { padding: 42px 16px 16px; font-size: 13px; }
+    .facts { margin-top: 24px; display: grid; grid-template-columns: 220px 1fr; border-top: 1px solid var(--line); max-width: 900px; }
+    .facts dt, .facts dd { margin: 0; padding: 14px 0; border-bottom: 1px solid var(--line); }
+    .facts dt { color: var(--muted); font-size: 15px; }
+    .facts dd { font-size: 15px; overflow-wrap: anywhere; }
+    .hot-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+    .hot-foot { padding: 32px 0 48px; border-top: 1px solid var(--line); color: var(--dim); font-size: 14px; }
+    @media (max-width: 860px) {
+      .hot-steps, .hot-grid { grid-template-columns: 1fr; }
+      .facts { grid-template-columns: 1fr; }
+      .facts dt { padding-bottom: 0; border-bottom: 0; }
+      .hot-hero { padding: 56px 0 40px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hot-top">
+    <div class="wrap">
+      <a href="/" class="brand" aria-label="Shield360 home">
+        <img class="brand-mark" src="/assets/logo-mark.svg" alt="" width="28" height="28">
+        <span><span class="wordmark">Shield<b>360</b></span></span>
+      </a>
+      <span class="tag">HOT System Agent</span>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hot-hero">
+      <div class="wrap">
+        <span class="eyebrow">Install</span>
+        <h1>Install the HOT System Agent <span class="serif">in one command.</span></h1>
+        <p class="lead">Open Windows PowerShell as Administrator and paste this. It downloads the agent and tray, checks the download's SHA‑256, and asks for your server address and enrollment token.</p>
+        <div class="one">
+          <div class="code">
+            <button class="copy" data-copy="cmd-one" aria-label="Copy install command">Copy</button>
+<pre id="cmd-one">irm https://shield360.biz/hot/install.ps1 | iex</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="hot">
+      <div class="wrap">
+        <h2>What happens</h2>
+        <ol class="hot-steps">
+          <li><h3>Run as Administrator</h3><p>Start menu, type PowerShell, right‑click Windows PowerShell and choose Run as administrator.</p></li>
+          <li><h3>Answer two questions</h3><p>The agent address IT gave you, and an enrollment token from Admin › Enrollment in the dashboard.</p></li>
+          <li><h3>See it in the dashboard</h3><p>The PC enrolls within a minute. If its name doesn't match the token's pattern, approve it under Admin › Machines &amp; keys.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="hot">
+      <div class="wrap">
+        <h2>Other ways to run it</h2>
+        <div class="hot-grid">
+          <div>
+            <h3>Without questions</h3>
+            <p>Give the server and token up front, for remote PowerShell or a pasted runbook.</p>
+            <div class="code">
+              <button class="copy" data-copy="cmd-silent" aria-label="Copy command">Copy</button>
+<pre id="cmd-silent">&amp; ([scriptblock]::Create((irm https://shield360.biz/hot/install.ps1))) -Server https://agents.example.com -Token fpe_xxxx</pre>
+            </div>
+          </div>
+          <div>
+            <h3>Check first</h3>
+            <p>Downloads and checks everything, and changes nothing on the PC.</p>
+            <div class="code">
+              <button class="copy" data-copy="cmd-check" aria-label="Copy command">Copy</button>
+<pre id="cmd-check">&amp; ([scriptblock]::Create((irm https://shield360.biz/hot/install.ps1))) -WhatIf</pre>
+            </div>
+          </div>
+          <div>
+            <h3>Upgrade</h3>
+            <p>Run the same one‑liner on an enrolled PC. It keeps the server address, identity and queued data, and asks nothing.</p>
+            <div class="code">
+              <button class="copy" data-copy="cmd-up" aria-label="Copy command">Copy</button>
+<pre id="cmd-up">irm https://shield360.biz/hot/install.ps1 | iex</pre>
+            </div>
+          </div>
+          <div>
+            <h3>Remove</h3>
+            <p>Or use Apps &amp; features › HOT System Agent › Uninstall.</p>
+            <div class="code">
+              <button class="copy" data-copy="cmd-rm" aria-label="Copy command">Copy</button>
+<pre id="cmd-rm">&amp; "$env:ProgramFiles\FleetPulse\Uninstall-FleetPulse.ps1"</pre>
+            </div>
+          </div>
+        </div>
+        <p>More options: <code>-KillList teams.exe,outlook.exe</code>, <code>-NoScreenshots</code>, <code>-InstallDir</code>, <code>-CfAccessClientId</code> with <code>-CfAccessClientSecret</code>, and <code>-RequireSignedTray</code> once your tray is code‑signed.</p>
+      </div>
+    </section>
+
+    <section class="hot">
+      <div class="wrap">
+        <h2>Details</h2>
+        <dl class="facts">
+          <dt>Release</dt><dd id="rel-version">See latest.json</dd>
+          <dt>SHA‑256</dt><dd class="mono" id="rel-sha">–</dd>
+          <dt>Needs</dt><dd>Windows 10 or 11 (64‑bit), Administrator, and HTTPS access from the PC to your HOT System Agent server. No .NET runtime.</dd>
+          <dt>Installs to</dt><dd><code>C:\Program Files\FleetPulse</code>, data in <code>C:\ProgramData\FleetPulse</code></dd>
+          <dt>Runs as</dt><dd>The “HOT System Agent” service (SYSTEM), and the tray at each user's sign‑in</dd>
+          <dt>Log</dt><dd><code>C:\ProgramData\FleetPulse\install.log</code></dd>
+        </dl>
+        <div class="hot-links">
+          <a class="btn btn-ghost btn-sm" href="install.ps1" target="_blank" rel="noopener">Read install.ps1</a>
+          <a class="btn btn-ghost btn-sm" id="rel-zip" href="download/latest.json">Download the package</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="hot-foot">
+    <div class="wrap">HOT System Agent · HOT Systems · served from shield360.biz</div>
+  </footer>
+
+  <script src="download/latest.js"></script>
+  <script>
+    (function () {
+      var r = window.FLEETPULSE_RELEASE;
+      if (r) {
+        document.getElementById('rel-version').textContent =
+          r.version + ' · ' + (r.size / 1048576).toFixed(1) + ' MB · ' + r.released;
+        document.getElementById('rel-sha').textContent = r.sha256;
+        var a = document.getElementById('rel-zip');
+        a.href = 'download/' + r.file;
+        a.setAttribute('download', '');
+      }
+      document.querySelectorAll('.copy').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var text = document.getElementById(b.dataset.copy).textContent;
+          navigator.clipboard.writeText(text).then(function () {
+            b.textContent = 'Copied'; b.classList.add('done');
+            setTimeout(function () { b.textContent = 'Copy'; b.classList.remove('done'); }, 1600);
+          });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
