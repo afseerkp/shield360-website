@@ -187,7 +187,7 @@
           r.version + ' · ' + (r.size / 1048576).toFixed(1) + ' MB · ' + r.released;
         document.getElementById('rel-sha').textContent = r.sha256;
         var a = document.getElementById('rel-zip');
-        a.href = 'download/' + r.file;
+        a.href = r.url || 'download/' + r.file;
         a.setAttribute('download', '');
       }
       document.querySelectorAll('.copy').forEach(function (b) {

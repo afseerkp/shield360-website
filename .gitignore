@@ -10,3 +10,6 @@ data/
 *.pfx
 *.key
 *.pem
+
+# The Advanced package is published as a GitHub release, not with the site
+advanced/release/

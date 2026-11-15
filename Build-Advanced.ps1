@@ -1,29 +1,37 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    Builds the files served from https://shield360.biz/advanced/download/.
+    Builds the Advanced edition package and the files served from https://shield360.biz/advanced/download/.
 
 .DESCRIPTION
     Packages the Advanced edition (the .NET server, worker, console and agent) into
-    advanced\download\shield360-advanced-<version>-<fingerprint>.zip and writes latest.json,
-    latest.js and SHA256SUMS.txt next to it. The zip holds Install-Shield360Server.ps1 and the
-    package\ folder it installs, so extracting it and running the installer is the whole install.
+    advanced\release\shield360-advanced-<version>-<fingerprint>.zip. The zip holds
+    Install-Shield360Server.ps1 and the package\ folder it installs, so extracting it and
+    running the installer is the whole install.
+
+    The zip is too large for the website host, so it is published as a GitHub release of the
+    website repository (tag advanced-<version>) and advanced\release\ is not uploaded with the
+    site. advanced\download\ gets latest.json, latest.js and SHA256SUMS.txt, which give the
+    release's download address and the zip's checksum.
 
     By default it first runs ..\deploy\Publish-Shield360.ps1 to build the package. The standard
     edition's files (download\, install.ps1) are not touched: use Build-Downloads.ps1 for those.
 
-    Never packaged: appsettings.Development.json, appsettings.Production.json (connection string)
-    and anything under a data folder. The build fails if one would end up in the zip.
+    Never packaged: appsettings.Development.json, appsettings.Production.json (connection string),
+    certificates and anything under a data folder. The build fails if one would end up in the zip.
 
 .EXAMPLE
-    .\Build-Advanced.ps1 -Version 2.0.0-preview.1
-    .\Build-Advanced.ps1 -Version 2.0.0-preview.1 -SkipPublish
+    .\Build-Advanced.ps1 -Version 2.0.0-preview.2 -Publish
+    .\Build-Advanced.ps1 -Version 2.0.0-preview.2 -SkipPublish     # reuse deploy\package, no upload
 #>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)][ValidatePattern('^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$')][string]$Version,
     # Reuse deploy\package as it is instead of building it again.
-    [switch]$SkipPublish
+    [switch]$SkipPublish,
+    # Create the GitHub release and upload the zip (needs the gh CLI, signed in). Without it, upload the zip yourself.
+    [switch]$Publish,
+    [string]$Repository = 'afseerkp/shield360-website'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -33,8 +41,10 @@ $root = Split-Path $PSScriptRoot -Parent
 $deploy = Join-Path $root 'deploy'
 $package = Join-Path $deploy 'package'
 $out = Join-Path $PSScriptRoot 'advanced\download'
-# GitHub Pages refuses a file of 100 MB or more.
-$maxBytes = 99MB
+$staging = Join-Path $PSScriptRoot 'advanced\release'
+$tag = "advanced-$Version"
+# A GitHub release takes files under 2 GB.
+$maxBytes = 2000MB
 
 if (-not $SkipPublish) {
     & (Join-Path $deploy 'Publish-Shield360.ps1')
@@ -52,17 +62,12 @@ foreach ($f in $files) {
     }
 }
 
-# Keep the newest previous package: a browser or CDN may still serve the old latest.json for a few
-# minutes after a release, and its download link must keep working.
-$previous = Get-ChildItem $out -Filter 'shield360-advanced-*.zip' -ErrorAction SilentlyContinue |
-    Sort-Object LastWriteTime -Descending | Select-Object -First 1
-$keep = $null
-if ($previous) { $keep = Join-Path $env:TEMP $previous.Name; Copy-Item $previous.FullName $keep -Force }
+foreach ($dir in $out, $staging) {
+    if (Test-Path $dir) { Remove-Item $dir -Recurse -Force }
+    New-Item -ItemType Directory $dir -Force | Out-Null
+}
 
-if (Test-Path $out) { Remove-Item $out -Recurse -Force }
-New-Item -ItemType Directory $out -Force | Out-Null
-
-$buildPath = Join-Path $out 'build.zip'
+$buildPath = Join-Path $staging 'build.zip'
 $zip = [IO.Compression.ZipFile]::Open($buildPath, 'Create')
 try {
     foreach ($f in $files) {
@@ -73,37 +78,42 @@ try {
 } finally { $zip.Dispose() }
 
 if ((Get-Item $buildPath).Length -ge $maxBytes) {
-    $mb = [math]::Round((Get-Item $buildPath).Length / 1MB, 1)
     Remove-Item $buildPath -Force
-    throw "The package is $mb MB; the website host takes files under 99 MB. Host it elsewhere or make it smaller."
+    throw 'The package is 2 GB or more, which a GitHub release does not take.'
 }
 
-# Every build gets a unique name (version + content fingerprint), so a cached package can never
-# be served under a name that latest.json gives a different checksum for.
-$fingerprint = (Get-FileHash $buildPath -Algorithm SHA256).Hash.Substring(0, 8).ToLower()
-$zipName = "shield360-advanced-$Version-$fingerprint.zip"
-$zipPath = Join-Path $out $zipName
+# Every build gets a unique name (version + content fingerprint), so a file name is never reused for different content.
+$sha = (Get-FileHash $buildPath -Algorithm SHA256).Hash.ToLower()
+$zipName = "shield360-advanced-$Version-$($sha.Substring(0, 8)).zip"
+$zipPath = Join-Path $staging $zipName
 Move-Item $buildPath $zipPath
-if ($keep -and (Split-Path $keep -Leaf) -ne $zipName) { Move-Item $keep (Join-Path $out (Split-Path $keep -Leaf)) }
-elseif ($keep) { Remove-Item $keep -Force }
-
-$sums = Get-ChildItem $out -File | Sort-Object Name | ForEach-Object {
-    '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name
-}
-[IO.File]::WriteAllLines((Join-Path $out 'SHA256SUMS.txt'), $sums)
-
 $zipItem = Get-Item $zipPath
+
 $latest = [ordered]@{
     version  = $Version
     file     = $zipName
+    url      = "https://github.com/$Repository/releases/download/$tag/$zipName"
     size     = $zipItem.Length
-    sha256   = (Get-FileHash $zipPath -Algorithm SHA256).Hash.ToLower()
+    sha256   = $sha
     released = (Get-Date).ToString('yyyy-MM-dd')
 }
 [IO.File]::WriteAllText((Join-Path $out 'latest.json'), ($latest | ConvertTo-Json))
-
 # Lets the page show the current version and checksum without a build step.
-$js = "window.SHIELD360_ADVANCED_RELEASE = $($latest | ConvertTo-Json -Compress);"
-[IO.File]::WriteAllText((Join-Path $out 'latest.js'), $js)
+[IO.File]::WriteAllText((Join-Path $out 'latest.js'), "window.SHIELD360_ADVANCED_RELEASE = $($latest | ConvertTo-Json -Compress);")
+[IO.File]::WriteAllLines((Join-Path $out 'SHA256SUMS.txt'), @("$sha  $zipName"))
 
-Write-Host "Built $zipName ($([math]::Round($zipItem.Length / 1MB, 1)) MB, $($files.Count) files) in $out" -ForegroundColor Green
+Write-Host "Built $zipName ($([math]::Round($zipItem.Length / 1MB, 1)) MB, $($files.Count) files) in $staging" -ForegroundColor Green
+
+if ($Publish) {
+    # An earlier build of the same version keeps its file: a cached latest.json may still point at it.
+    & gh release view $tag --repo $Repository *> $null
+    if ($LASTEXITCODE -eq 0) { & gh release upload $tag $zipPath --repo $Repository }
+    else {
+        & gh release create $tag $zipPath --repo $Repository --title "Shield360 Endpoint Advanced $Version" --prerelease --latest=false `
+            --notes "Shield360 Endpoint Advanced $Version (preview). Install steps: https://shield360.biz/advanced/`n`nSHA-256: $sha"
+    }
+    if ($LASTEXITCODE) { throw 'The GitHub release upload failed' }
+    Write-Host "Published $($latest.url). Now upload advanced\ (the site) so the page points at it." -ForegroundColor Green
+} else {
+    Write-Host "Not uploaded. Run again with -Publish, or upload the zip to release '$tag' of $Repository, then upload advanced\."
+}
