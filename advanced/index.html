@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Shield360 Endpoint Advanced — preview</title>
+  <title>Shield360 Endpoint — Advanced version (preview)</title>
   <meta name="description" content="Shield360 Endpoint Advanced (preview): roles and single sign-on, incidents, detection rules, vulnerability and compliance tracking, on PostgreSQL.">
   <meta name="robots" content="noindex">
   <meta name="theme-color" content="#0a0b0d">
@@ -21,6 +21,8 @@
     .adv-hero .lead { margin-top: 22px; }
     .adv-note { margin-top: 28px; max-width: 760px; padding: 16px 20px; border: 1px solid var(--line-2); border-radius: var(--radius-sm); background: var(--panel); color: var(--muted); font-size: 15px; }
     .adv-note b { color: var(--text); }
+    .one { margin-top: 32px; max-width: 760px; }
+    .one .code pre { padding: 20px 88px 20px 20px; color: var(--text); font-size: 14px; white-space: pre-wrap; word-break: break-all; }
     .adv { padding: 56px 0; border-top: 1px solid var(--line); }
     .adv h2 { font-size: clamp(26px, 3vw, 36px); letter-spacing: -.03em; }
     .adv > .wrap > p { margin-top: 14px; color: var(--muted); max-width: 680px; }
@@ -56,20 +58,26 @@
         <img class="brand-mark" src="/assets/logo-mark.svg" alt="" width="28" height="28">
         <span><span class="wordmark">Shield<b>360</b></span></span>
       </a>
-      <span class="tag">Advanced · preview</span>
+      <span class="tag">Advanced version · preview</span>
     </div>
   </header>
 
   <main id="main">
     <section class="adv-hero">
       <div class="wrap">
-        <span class="eyebrow">Advanced edition</span>
+        <span class="eyebrow">Advanced version</span>
         <h1>The same protection, <span class="serif">built for a security team.</span></h1>
         <p class="lead">Shield360 Endpoint Advanced keeps everything in the standard edition and adds roles, single sign‑on, incidents, detection rules, and vulnerability and compliance tracking. It runs as two Windows services on PostgreSQL.</p>
+        <div class="one">
+          <div class="code">
+            <button class="copy" data-copy="cmd-one" aria-label="Copy install command">Copy</button>
+<pre id="cmd-one">irm https://shield360.biz/advanced/install.ps1 | iex</pre>
+          </div>
+        </div>
         <p class="adv-note"><b>This is a preview.</b> Install it on a spare server first, not over a server you rely on. The <a class="text-link" href="/">standard edition</a> is still the supported release, and its downloads have not changed.</p>
         <div class="adv-links">
-          <a class="btn btn-primary" id="rel-zip" href="download/latest.json">Download the package</a>
-          <a class="btn btn-ghost" href="#install">How to install</a>
+          <a class="btn btn-primary" href="#install">How to install</a>
+          <a class="btn btn-ghost" href="install.ps1" target="_blank" rel="noopener">Read install.ps1</a>
         </div>
       </div>
     </section>
@@ -109,41 +117,69 @@
     <section class="adv" id="install">
       <div class="wrap">
         <h2>Install</h2>
-        <p>There is no one‑line installer yet. Download the package, check it, and run the installer inside it from an elevated PowerShell.</p>
+        <p>One command, from Windows PowerShell opened as Administrator. It downloads the package, checks its SHA‑256, asks which database to use, and installs the two services.</p>
         <ol class="adv-steps">
           <li>
             <h3>Create a database</h3>
             <p>On PostgreSQL 16 or newer, create an empty database and a login that owns it. TimescaleDB is optional.</p>
           </li>
           <li>
-            <h3>Download and check</h3>
-            <p>Download the package, then compare its SHA‑256 with the one under Details.</p>
+            <h3>Run the installer</h3>
+            <p>Answer five questions: the PostgreSQL server, port, database, login and password. Enter accepts the suggested value.</p>
             <div class="code">
-              <button class="copy" data-copy="cmd-hash" aria-label="Copy command">Copy</button>
-<pre id="cmd-hash">Get-FileHash .\shield360-advanced-*.zip -Algorithm SHA256</pre>
+              <button class="copy" data-copy="cmd-run" aria-label="Copy command">Copy</button>
+<pre id="cmd-run">irm https://shield360.biz/advanced/install.ps1 | iex</pre>
             </div>
           </li>
           <li>
-            <h3>Extract and install</h3>
-            <p>Extract the zip, then run the installer with your connection string. It prints the first admin sign‑in at the end.</p>
-            <div class="code">
-              <button class="copy" data-copy="cmd-install" aria-label="Copy command">Copy</button>
-<pre id="cmd-install">.\Install-Shield360Server.ps1 -Connection "Host=localhost;Database=shield360;Username=shield360;Password=..."</pre>
-            </div>
+            <h3>Sign in</h3>
+            <p>The installer prints the server address and the first admin sign‑in. You choose your own password at first sign‑in.</p>
           </li>
         </ol>
         <div class="adv-grid">
           <div>
-            <h3>With HTTPS</h3>
-            <p>Without a certificate the server listens on plain HTTP, which is only suitable for a first look. Give it a certificate to serve HTTPS.</p>
+            <h3>Without questions</h3>
+            <p>Give the connection string up front, for a runbook or remote PowerShell.</p>
             <div class="code">
-              <button class="copy" data-copy="cmd-https" aria-label="Copy command">Copy</button>
-<pre id="cmd-https">.\Install-Shield360Server.ps1 -Connection "..." -Port 8443 -CertificatePath C:\certs\shield360.pfx -CertificatePassword ...</pre>
+              <button class="copy" data-copy="cmd-silent" aria-label="Copy command">Copy</button>
+<pre id="cmd-silent">&amp; ([scriptblock]::Create((irm https://shield360.biz/advanced/install.ps1))) -Connection 'Host=localhost;Database=shield360;Username=shield360;Password=...'</pre>
             </div>
           </div>
           <div>
-            <h3>Upgrade or remove</h3>
-            <p>To upgrade, run the installer from a newer package with the same parameters. To remove the services and the firewall rule (the database is kept):</p>
+            <h3>With HTTPS</h3>
+            <p>Without a certificate the server listens on plain HTTP, which is only suitable for a first look.</p>
+            <div class="code">
+              <button class="copy" data-copy="cmd-https" aria-label="Copy command">Copy</button>
+<pre id="cmd-https">&amp; ([scriptblock]::Create((irm https://shield360.biz/advanced/install.ps1))) -Port 8443 -CertificatePath C:\certs\shield360.pfx -CertificatePassword ...</pre>
+            </div>
+          </div>
+          <div>
+            <h3>Check first</h3>
+            <p>Downloads the package and checks its SHA‑256, and changes nothing on the server.</p>
+            <div class="code">
+              <button class="copy" data-copy="cmd-check" aria-label="Copy command">Copy</button>
+<pre id="cmd-check">&amp; ([scriptblock]::Create((irm https://shield360.biz/advanced/install.ps1))) -CheckOnly</pre>
+            </div>
+          </div>
+          <div>
+            <h3>Upgrade</h3>
+            <p>Run the same one‑liner on the server. It keeps the database connection already configured and asks nothing.</p>
+            <div class="code">
+              <button class="copy" data-copy="cmd-up" aria-label="Copy command">Copy</button>
+<pre id="cmd-up">irm https://shield360.biz/advanced/install.ps1 | iex</pre>
+            </div>
+          </div>
+          <div>
+            <h3>By hand, or offline</h3>
+            <p>Download the package, compare its SHA‑256 with the one under Details, extract it, and run the installer inside from an elevated PowerShell.</p>
+            <div class="code">
+              <button class="copy" data-copy="cmd-install" aria-label="Copy command">Copy</button>
+<pre id="cmd-install">.\Install-Shield360Server.ps1 -Connection "Host=localhost;Database=shield360;Username=shield360;Password=..."</pre>
+            </div>
+          </div>
+          <div>
+            <h3>Remove</h3>
+            <p>From the extracted package. It removes the services and the firewall rule; the database is kept.</p>
             <div class="code">
               <button class="copy" data-copy="cmd-rm" aria-label="Copy command">Copy</button>
 <pre id="cmd-rm">.\Install-Shield360Server.ps1 -Uninstall</pre>
@@ -167,6 +203,7 @@
           <dt>Endpoints</dt><dd>The Shield360 agent, included in the package. The console gives you the install command once the server is up.</dd>
         </dl>
         <div class="adv-links">
+          <a class="btn btn-ghost btn-sm" id="rel-zip" href="download/latest.json">Download the package</a>
           <a class="btn btn-ghost btn-sm" href="download/SHA256SUMS.txt" target="_blank" rel="noopener">All checksums</a>
           <a class="btn btn-ghost btn-sm" href="/#deploy">Standard edition</a>
         </div>
@@ -175,7 +212,7 @@
   </main>
 
   <footer class="adv-foot">
-    <div class="wrap">Shield360 Endpoint Advanced · preview · served from shield360.biz</div>
+    <div class="wrap">Shield360 Endpoint · Advanced version · preview · served from shield360.biz</div>
   </footer>
 
   <script src="download/latest.js"></script>
