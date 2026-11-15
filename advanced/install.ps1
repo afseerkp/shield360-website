@@ -34,7 +34,8 @@ param(
     [int]$Port = 8080,
     [string]$CertificatePath,
     [string]$CertificatePassword,
-    [string]$InstallDir = (Join-Path $env:ProgramFiles 'Shield360'),
+    # Where the server goes; the default is "Program Files\Shield360 Server".
+    [string]$InstallDir,
     # Keep the services running as SYSTEM instead of their own low-privilege accounts.
     [switch]$RunAsLocalSystem,
     # Download and verify the package, then stop. Changes nothing on this machine.
@@ -78,9 +79,11 @@ function Install-Shield360Advanced {
 
     # ---- The database ------------------------------------------------------------
     # Asked before the download, so a 100 MB download never waits on a question.
-    $settings = Join-Path $InstallDir 'api\appsettings.Production.json'
     if (-not $CheckOnly -and -not $Connection) {
-        if (Test-Path $settings) {
+        # An existing installation: where -InstallDir says, the default folder, or where an early preview put it.
+        $places = @($InstallDir, (Join-Path $env:ProgramFiles 'Shield360 Server'), (Join-Path $env:ProgramFiles 'Shield360')) | Where-Object { $_ }
+        $settings = $places | ForEach-Object { Join-Path $_ 'api\appsettings.Production.json' } | Where-Object { Test-Path $_ } | Select-Object -First 1
+        if ($settings) {
             $Connection = (Get-Content $settings -Raw | ConvertFrom-Json).ConnectionStrings.Shield360
             if ($Connection) { Step 'Upgrade: keeping the database connection already configured' }
         }
@@ -141,8 +144,9 @@ function Install-Shield360Advanced {
         if (-not (Test-Path $installer)) { throw 'The package has no Install-Shield360Server.ps1. Nothing was installed.' }
         Get-ChildItem $extract -Recurse -File | Unblock-File
 
-        Step "Installing to $InstallDir"
-        $installArgs = @{ Connection = $Connection; PackageDir = (Join-Path $extract 'package'); InstallDir = $InstallDir; Port = $Port }
+        Step 'Installing'
+        $installArgs = @{ Connection = $Connection; PackageDir = (Join-Path $extract 'package'); Port = $Port }
+        if ($InstallDir) { $installArgs.InstallDir = $InstallDir }
         if ($CertificatePath) { $installArgs.CertificatePath = (Resolve-Path $CertificatePath).Path }
         if ($CertificatePassword) { $installArgs.CertificatePassword = $CertificatePassword }
         if ($RunAsLocalSystem) { $installArgs.RunAsLocalSystem = $true }
