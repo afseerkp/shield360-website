@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shield360 Endpoint Advanced — preview</title>
+  <meta name="description" content="Shield360 Endpoint Advanced (preview): roles and single sign-on, incidents, detection rules, vulnerability and compliance tracking, on PostgreSQL.">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#0a0b0d">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@700&family=Geist:wght@300..800&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .adv-top { border-bottom: 1px solid var(--line); }
+    .adv-top .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; gap: 16px; }
+    .adv-top .tag { font: 500 13px var(--mono); color: var(--muted); }
+    .adv-hero { padding: 88px 0 56px; }
+    .adv-hero h1 { font-size: clamp(36px, 5.4vw, 64px); letter-spacing: -.04em; line-height: 1.02; max-width: 16ch; }
+    .adv-hero .lead { margin-top: 22px; }
+    .adv-note { margin-top: 28px; max-width: 760px; padding: 16px 20px; border: 1px solid var(--line-2); border-radius: var(--radius-sm); background: var(--panel); color: var(--muted); font-size: 15px; }
+    .adv-note b { color: var(--text); }
+    .adv { padding: 56px 0; border-top: 1px solid var(--line); }
+    .adv h2 { font-size: clamp(26px, 3vw, 36px); letter-spacing: -.03em; }
+    .adv > .wrap > p { margin-top: 14px; color: var(--muted); max-width: 680px; }
+    .adv-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 28px; padding: 0; counter-reset: s; }
+    .adv-steps li { list-style: none; padding: 22px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--panel); display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+    .adv-steps li::before { counter-increment: s; content: counter(s); display: block; font: 500 13px var(--mono); color: var(--accent); }
+    .adv-steps h3 { font-size: 18px; }
+    .adv-steps p { color: var(--muted); font-size: 15px; }
+    .adv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 32px; margin-top: 28px; padding: 0; }
+    .adv-grid > div { display: flex; flex-direction: column; gap: 8px; }
+    .adv-grid h3 { font-size: 17px; }
+    .adv-grid p { color: var(--muted); font-size: 15px; }
+    .adv .code { margin-top: 4px; }
+    .adv .code pre { padding: 42px 16px 16px; font-size: 13px; color: var(--text); white-space: pre-wrap; word-break: break-all; }
+    .facts { margin-top: 24px; display: grid; grid-template-columns: 220px 1fr; border-top: 1px solid var(--line); max-width: 900px; }
+    .facts dt, .facts dd { margin: 0; padding: 14px 0; border-bottom: 1px solid var(--line); }
+    .facts dt { color: var(--muted); font-size: 15px; }
+    .facts dd { font-size: 15px; overflow-wrap: anywhere; }
+    .adv-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+    .adv-foot { padding: 32px 0 48px; border-top: 1px solid var(--line); color: var(--dim); font-size: 14px; }
+    @media (max-width: 860px) {
+      .adv-steps, .adv-grid { grid-template-columns: 1fr; }
+      .facts { grid-template-columns: 1fr; }
+      .facts dt { padding-bottom: 0; border-bottom: 0; }
+      .adv-hero { padding: 56px 0 40px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="adv-top">
+    <div class="wrap">
+      <a href="/" class="brand" aria-label="Shield360 home">
+        <img class="brand-mark" src="/assets/logo-mark.svg" alt="" width="28" height="28">
+        <span><span class="wordmark">Shield<b>360</b></span></span>
+      </a>
+      <span class="tag">Advanced · preview</span>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="adv-hero">
+      <div class="wrap">
+        <span class="eyebrow">Advanced edition</span>
+        <h1>The same protection, <span class="serif">built for a security team.</span></h1>
+        <p class="lead">Shield360 Endpoint Advanced keeps everything in the standard edition and adds roles, single sign‑on, incidents, detection rules, and vulnerability and compliance tracking. It runs as two Windows services on PostgreSQL.</p>
+        <p class="adv-note"><b>This is a preview.</b> Install it on a spare server first, not over a server you rely on. The <a class="text-link" href="/">standard edition</a> is still the supported release, and its downloads have not changed.</p>
+        <div class="adv-links">
+          <a class="btn btn-primary" id="rel-zip" href="download/latest.json">Download the package</a>
+          <a class="btn btn-ghost" href="#install">How to install</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="adv">
+      <div class="wrap">
+        <h2>What it adds</h2>
+        <div class="adv-grid">
+          <div>
+            <h3>Roles and single sign‑on</h3>
+            <p>Admin, analyst and read‑only users, each with their own sign‑in. Sign in with Microsoft Entra ID or Google Workspace, pinned to your organisation.</p>
+          </div>
+          <div>
+            <h3>Incidents</h3>
+            <p>Open an incident from one or more alerts, give it an owner and a priority, and close it with a reason. Each priority has a response and a resolution target, and a missed target sends a notification.</p>
+          </div>
+          <div>
+            <h3>Detection rules and hunting</h3>
+            <p>Write your own rules on endpoint events, search process starts and connections across the fleet, and find programs that run on only a few machines.</p>
+          </div>
+          <div>
+            <h3>Vulnerabilities</h3>
+            <p>Missing Windows security updates and installed programs with a known CVE, flagged when CISA lists the CVE as exploited, with its CVSS score and its EPSS chance of exploitation. Deadlines per severity and risk acceptance are included.</p>
+          </div>
+          <div>
+            <h3>Compliance</h3>
+            <p>CIS Controls v8.1 and ISO/IEC 27001:2022 scores from what the agents already report, per control and per endpoint, with the change since last week and a CSV report.</p>
+          </div>
+          <div>
+            <h3>Dashboards and a monthly report</h3>
+            <p>Five dashboards, a security health index for the whole fleet, and a printable monthly posture report.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="adv" id="install">
+      <div class="wrap">
+        <h2>Install</h2>
+        <p>There is no one‑line installer yet. Download the package, check it, and run the installer inside it from an elevated PowerShell.</p>
+        <ol class="adv-steps">
+          <li>
+            <h3>Create a database</h3>
+            <p>On PostgreSQL 16 or newer, create an empty database and a login that owns it. TimescaleDB is optional.</p>
+          </li>
+          <li>
+            <h3>Download and check</h3>
+            <p>Download the package, then compare its SHA‑256 with the one under Details.</p>
+            <div class="code">
+              <button class="copy" data-copy="cmd-hash" aria-label="Copy command">Copy</button>
+<pre id="cmd-hash">Get-FileHash .\shield360-advanced-*.zip -Algorithm SHA256</pre>
+            </div>
+          </li>
+          <li>
+            <h3>Extract and install</h3>
+            <p>Extract the zip, then run the installer with your connection string. It prints the first admin sign‑in at the end.</p>
+            <div class="code">
+              <button class="copy" data-copy="cmd-install" aria-label="Copy command">Copy</button>
+<pre id="cmd-install">.\Install-Shield360Server.ps1 -Connection "Host=localhost;Database=shield360;Username=shield360;Password=..."</pre>
+            </div>
+          </li>
+        </ol>
+        <div class="adv-grid">
+          <div>
+            <h3>With HTTPS</h3>
+            <p>Without a certificate the server listens on plain HTTP, which is only suitable for a first look. Give it a certificate to serve HTTPS.</p>
+            <div class="code">
+              <button class="copy" data-copy="cmd-https" aria-label="Copy command">Copy</button>
+<pre id="cmd-https">.\Install-Shield360Server.ps1 -Connection "..." -Port 8443 -CertificatePath C:\certs\shield360.pfx -CertificatePassword ...</pre>
+            </div>
+          </div>
+          <div>
+            <h3>Upgrade or remove</h3>
+            <p>To upgrade, run the installer from a newer package with the same parameters. To remove the services and the firewall rule (the database is kept):</p>
+            <div class="code">
+              <button class="copy" data-copy="cmd-rm" aria-label="Copy command">Copy</button>
+<pre id="cmd-rm">.\Install-Shield360Server.ps1 -Uninstall</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="adv">
+      <div class="wrap">
+        <h2>Details</h2>
+        <dl class="facts">
+          <dt>Release</dt><dd id="rel-version">See latest.json</dd>
+          <dt>SHA‑256</dt><dd class="mono" id="rel-sha">–</dd>
+          <dt>Needs</dt><dd>A 64‑bit Windows Server or Windows machine, Administrator, and PostgreSQL 16 or newer. No .NET runtime and no Node.js.</dd>
+          <dt>Installs to</dt><dd><code>C:\Program Files\Shield360</code>, server files in <code>C:\ProgramData\Shield360</code>, data in PostgreSQL</dd>
+          <dt>Runs as</dt><dd>The “Shield360 Server” and “Shield360 Worker” services, each under its own low‑privilege service account</dd>
+          <dt>Port</dt><dd>8080 by default; change it with <code>-Port</code></dd>
+          <dt>Logs</dt><dd>Windows event log, Application, sources “Shield360 Server” and “Shield360 Worker”</dd>
+          <dt>Endpoints</dt><dd>The Shield360 agent, included in the package. The console gives you the install command once the server is up.</dd>
+        </dl>
+        <div class="adv-links">
+          <a class="btn btn-ghost btn-sm" href="download/SHA256SUMS.txt" target="_blank" rel="noopener">All checksums</a>
+          <a class="btn btn-ghost btn-sm" href="/#deploy">Standard edition</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="adv-foot">
+    <div class="wrap">Shield360 Endpoint Advanced · preview · served from shield360.biz</div>
+  </footer>
+
+  <script src="download/latest.js"></script>
+  <script>
+    (function () {
+      var r = window.SHIELD360_ADVANCED_RELEASE;
+      if (r) {
+        document.getElementById('rel-version').textContent =
+          r.version + ' · ' + (r.size / 1048576).toFixed(1) + ' MB · ' + r.released;
+        document.getElementById('rel-sha').textContent = r.sha256;
+        var a = document.getElementById('rel-zip');
+        a.href = 'download/' + r.file;
+        a.setAttribute('download', '');
+      }
+      document.querySelectorAll('.copy').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var text = document.getElementById(b.dataset.copy).textContent;
+          navigator.clipboard.writeText(text).then(function () {
+            b.textContent = 'Copied'; b.classList.add('done');
+            setTimeout(function () { b.textContent = 'Copy'; b.classList.remove('done'); }, 1600);
+          });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
