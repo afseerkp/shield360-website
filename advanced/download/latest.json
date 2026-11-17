@@ -1,8 +1,8 @@
 {
-  "version": "2.0.0-preview.4",
-  "file": "shield360-advanced-2.0.0-preview.4-d58a2ef3.zip",
-  "url": "https://github.com/afseerkp/shield360-website/releases/download/advanced-2.0.0-preview.4/shield360-advanced-2.0.0-preview.4-d58a2ef3.zip",
-  "size": 102387223,
-  "sha256": "d58a2ef3acfa3323d54711684e4e4cb768e1d260dd5141edf2d1d9dbf963f784",
-  "released": "2026-11-15"
+  "version": "2.0.0-preview.5",
+  "file": "shield360-advanced-2.0.0-preview.5-3fd74124.zip",
+  "url": "https://github.com/afseerkp/shield360-website/releases/download/advanced-2.0.0-preview.5/shield360-advanced-2.0.0-preview.5-3fd74124.zip",
+  "size": 102388352,
+  "sha256": "3fd741243cf4baa7d86a6cb1e64bc10fa70af2424692dd80afd90f8f38490943",
+  "released": "2026-11-17"
 }
