@@ -6,17 +6,22 @@
 .DESCRIPTION
     1. Reads the current release from shield360.biz/advanced/download/latest.json.
     2. Downloads the package and verifies its SHA-256 checksum.
-    3. Asks for the PostgreSQL database to use (unless -Connection is given, or this is an upgrade).
+    3. Asks whether to install PostgreSQL here or which existing database to use (unless -Connection or
+       -InstallPostgreSql is given, or this is an upgrade).
     4. Extracts the package to a temporary folder and runs the Install-Shield360Server.ps1 inside it,
        which installs the "Shield360 Server" and "Shield360 Worker" services and opens the firewall port.
 
-    The database must exist first: PostgreSQL 16 or newer, an empty database and a login that owns it.
+    Installing PostgreSQL here downloads PostgreSQL 17 from EnterpriseDB and sets it up for this server only. An
+    existing database must be PostgreSQL 16 or newer, empty, with a login that owns it.
     On an upgrade the stored connection string is reused and nothing is asked.
 
     Run from an elevated Windows PowerShell.
 
 .EXAMPLE
     irm https://shield360.biz/advanced/install.ps1 | iex
+
+.EXAMPLE
+    & ([scriptblock]::Create((irm https://shield360.biz/advanced/install.ps1))) -InstallPostgreSql
 
 .EXAMPLE
     & ([scriptblock]::Create((irm https://shield360.biz/advanced/install.ps1))) -Connection 'Host=localhost;Database=shield360;Username=shield360;Password=...'
@@ -31,6 +36,8 @@
 param(
     # The PostgreSQL connection string. Asked for when missing on a fresh install.
     [string]$Connection,
+    # Install PostgreSQL 17 on this server for Shield360 instead of using an existing database.
+    [switch]$InstallPostgreSql,
     [int]$Port = 8080,
     [string]$CertificatePath,
     [string]$CertificatePassword,
@@ -46,7 +53,7 @@ param(
 # Everything runs inside a function so that a failure stops the installer
 # without closing the caller's window (this script is usually run through iex).
 function Install-Shield360Advanced {
-    param($Connection, $Port, $CertificatePath, $CertificatePassword, $InstallDir, $RunAsLocalSystem, $CheckOnly, $BaseUrl)
+    param($Connection, $InstallPostgreSql, $Port, $CertificatePath, $CertificatePassword, $InstallDir, $RunAsLocalSystem, $CheckOnly, $BaseUrl)
 
     $ErrorActionPreference = 'Stop'
     $ProgressPreference = 'SilentlyContinue'
@@ -79,7 +86,7 @@ function Install-Shield360Advanced {
 
     # ---- The database ------------------------------------------------------------
     # Asked before the download, so a 100 MB download never waits on a question.
-    if (-not $CheckOnly -and -not $Connection) {
+    if (-not $CheckOnly -and -not $Connection -and -not $InstallPostgreSql) {
         # An existing installation: where -InstallDir says, the default folder, or where an early preview put it.
         $places = @($InstallDir, (Join-Path $env:ProgramFiles 'Shield360 Server'), (Join-Path $env:ProgramFiles 'Shield360')) | Where-Object { $_ }
         $settings = $places | ForEach-Object { Join-Path $_ 'api\appsettings.Production.json' } | Where-Object { Test-Path $_ } | Select-Object -First 1
@@ -87,11 +94,22 @@ function Install-Shield360Advanced {
             $Connection = (Get-Content $settings -Raw | ConvertFrom-Json).ConnectionStrings.Shield360
             if ($Connection) { Step 'Upgrade: keeping the database connection already configured' }
         }
+        function Ask($label, $default) { $a = Read-Host "    $label [$default]"; if ($a) { $a.Trim() } else { $default } }
         if (-not $Connection) {
-            Write-Host '  The server keeps its data in PostgreSQL 16 or newer. Create an empty database and a'
-            Write-Host '  login that owns it first, then answer these (Enter accepts the value in brackets).'
+            $pgService = Get-Service -Name 'postgresql*' -ErrorAction SilentlyContinue | Select-Object -First 1
+            Write-Host '  The server keeps its data in PostgreSQL.'
+            if (-not $pgService) {
+                $answer = Ask 'Install PostgreSQL 17 on this server for Shield360? (Y = install it, N = use an existing database)' 'Y'
+                if ($answer -match '^(y|yes)$') { $InstallPostgreSql = $true }
+                Write-Host ''
+            } else {
+                Write-Host "  PostgreSQL is already installed here (service $($pgService.Name))."
+            }
+        }
+        if (-not $Connection -and -not $InstallPostgreSql) {
+            Write-Host '  Use PostgreSQL 16 or newer: create an empty database and a login that owns it first,'
+            Write-Host '  then answer these (Enter accepts the value in brackets).'
             Write-Host ''
-            function Ask($label, $default) { $a = Read-Host "    $label [$default]"; if ($a) { $a.Trim() } else { $default } }
             $dbHost = Ask 'PostgreSQL server' 'localhost'
             $dbPort = Ask 'Port' '5432'
             $dbName = Ask 'Database' 'shield360'
@@ -145,7 +163,12 @@ function Install-Shield360Advanced {
         Get-ChildItem $extract -Recurse -File | Unblock-File
 
         Step 'Installing'
-        $installArgs = @{ Connection = $Connection; PackageDir = (Join-Path $extract 'package'); Port = $Port }
+        $installArgs = @{ PackageDir = (Join-Path $extract 'package'); Port = $Port }
+        if ($Connection) { $installArgs.Connection = $Connection }
+        elseif ($InstallPostgreSql) {
+            if (-not (Select-String -Path $installer -Pattern 'InstallPostgreSql' -SimpleMatch -Quiet)) { throw 'This release cannot install PostgreSQL. Give -Connection for an existing database.' }
+            $installArgs.InstallPostgreSql = $true
+        }
         if ($InstallDir) { $installArgs.InstallDir = $InstallDir }
         if ($CertificatePath) { $installArgs.CertificatePath = (Resolve-Path $CertificatePath).Path }
         if ($CertificatePassword) { $installArgs.CertificatePassword = $CertificatePassword }
@@ -163,7 +186,7 @@ function Install-Shield360Advanced {
 
 $previousPolicy = Get-ExecutionPolicy -Scope Process
 try {
-    Install-Shield360Advanced -Connection $Connection -Port $Port -CertificatePath $CertificatePath -CertificatePassword $CertificatePassword `
+    Install-Shield360Advanced -Connection $Connection -InstallPostgreSql $InstallPostgreSql -Port $Port -CertificatePath $CertificatePath -CertificatePassword $CertificatePassword `
         -InstallDir $InstallDir -RunAsLocalSystem $RunAsLocalSystem -CheckOnly $CheckOnly -BaseUrl $BaseUrl
 } finally {
     # Put the session's policy back so the caller's window behaves as before.
