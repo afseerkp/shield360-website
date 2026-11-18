@@ -38,7 +38,8 @@ param(
     [string]$Connection,
     # Install PostgreSQL 17 on this server for Shield360 instead of using an existing database.
     [switch]$InstallPostgreSql,
-    [int]$Port = 8080,
+    # The port for a new install (default 8080). An upgrade keeps its port and certificate unless they are given.
+    [int]$Port,
     [string]$CertificatePath,
     [string]$CertificatePassword,
     # Where the server goes; the default is "Program Files\Shield360 Server".
@@ -163,7 +164,8 @@ function Install-Shield360Advanced {
         Get-ChildItem $extract -Recurse -File | Unblock-File
 
         Step 'Installing'
-        $installArgs = @{ PackageDir = (Join-Path $extract 'package'); Port = $Port }
+        $installArgs = @{ PackageDir = (Join-Path $extract 'package') }
+        if ($Port) { $installArgs.Port = $Port }
         if ($Connection) { $installArgs.Connection = $Connection }
         elseif ($InstallPostgreSql) {
             if (-not (Select-String -Path $installer -Pattern 'InstallPostgreSql' -SimpleMatch -Quiet)) { throw 'This release cannot install PostgreSQL. Give -Connection for an existing database.' }

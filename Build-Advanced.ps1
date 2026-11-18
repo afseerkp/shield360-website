@@ -47,7 +47,7 @@ $tag = "advanced-$Version"
 $maxBytes = 2000MB
 
 if (-not $SkipPublish) {
-    & (Join-Path $deploy 'Publish-Shield360.ps1')
+    & (Join-Path $deploy 'Publish-Shield360.ps1') -Version $Version
     if ($LASTEXITCODE) { throw 'Publish-Shield360.ps1 failed' }
 }
 foreach ($need in 'api\Shield360.Api.exe', 'api\wwwroot\index.html', 'worker\Shield360.Worker.exe', 'agent\Shield360Agent.ps1') {
