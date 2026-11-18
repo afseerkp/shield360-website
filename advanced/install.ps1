@@ -87,10 +87,10 @@ function Install-Shield360Advanced {
 
     # ---- The database ------------------------------------------------------------
     # Asked before the download, so a 100 MB download never waits on a question.
+    # An existing installation: where -InstallDir says, the default folder, or where an early preview put it.
+    $places = @($InstallDir, (Join-Path $env:ProgramFiles 'Shield360 Server'), (Join-Path $env:ProgramFiles 'Shield360')) | Where-Object { $_ }
+    $settings = $places | ForEach-Object { Join-Path $_ 'api\appsettings.Production.json' } | Where-Object { Test-Path $_ } | Select-Object -First 1
     if (-not $CheckOnly -and -not $Connection -and -not $InstallPostgreSql) {
-        # An existing installation: where -InstallDir says, the default folder, or where an early preview put it.
-        $places = @($InstallDir, (Join-Path $env:ProgramFiles 'Shield360 Server'), (Join-Path $env:ProgramFiles 'Shield360')) | Where-Object { $_ }
-        $settings = $places | ForEach-Object { Join-Path $_ 'api\appsettings.Production.json' } | Where-Object { Test-Path $_ } | Select-Object -First 1
         if ($settings) {
             $Connection = (Get-Content $settings -Raw | ConvertFrom-Json).ConnectionStrings.Shield360
             if ($Connection) { Step 'Upgrade: keeping the database connection already configured' }
@@ -181,7 +181,11 @@ function Install-Shield360Advanced {
     }
 
     Write-Host ''
-    Write-Host '  Done. Sign in with the account above; you will be asked to set your own password.' -ForegroundColor Green
+    if ($settings) {
+        Write-Host "  Done. Upgraded to $($release.version); sign in as before." -ForegroundColor Green
+    } else {
+        Write-Host '  Done. Sign in with the account above; you will be asked to set your own password.' -ForegroundColor Green
+    }
     Write-Host '  To remove it later, download the package and run .\Install-Shield360Server.ps1 -Uninstall.'
     Write-Host ''
 }
