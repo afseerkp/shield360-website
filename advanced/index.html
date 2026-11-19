@@ -187,10 +187,10 @@
           </div>
           <div>
             <h3>Move from the standard edition</h3>
-            <p>On the standard edition's server, from the extracted package. It takes over the port and HTTPS certificate, so agents keep the same address, stops the standard server, and imports endpoints, policies, users with their passwords, alerts and events. The standard server's folder is kept for a rollback.</p>
+            <p>On the standard edition's server, from the extracted package. It takes over the port and HTTPS certificate, so agents keep the same address, stops the standard server, and imports endpoints, policies, users with their passwords, alerts and events. The standard server's folder is kept for a rollback. This installs PostgreSQL too; to use your own database, give <code style="white-space:nowrap">-Connection</code> instead of <code style="white-space:nowrap">-InstallPostgreSql</code>.</p>
             <div class="code">
               <button class="copy" data-copy="cmd-move" aria-label="Copy command">Copy</button>
-<pre id="cmd-move">.\Install-Shield360Server.ps1 -Connection "Host=localhost;Database=shield360;Username=shield360;Password=..." -ImportFrom "C:\Shield360 Endpoint\server"</pre>
+<pre id="cmd-move">.\Install-Shield360Server.ps1 -InstallPostgreSql -ImportFrom "C:\Shield360 Endpoint\server"</pre>
             </div>
           </div>
           <div>
