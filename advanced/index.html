@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Shield360 Endpoint — Advanced version (preview)</title>
-  <meta name="description" content="Shield360 Endpoint Advanced (preview): roles and single sign-on, incidents, detection rules, vulnerability and compliance tracking, on PostgreSQL.">
+  <meta name="description" content="Shield360 Endpoint Advanced (preview): roles and single sign-on, event search, detection rules, incidents, vulnerability and compliance tracking, health scores and dashboards, on PostgreSQL.">
   <meta name="robots" content="noindex">
   <meta name="theme-color" content="#0a0b0d">
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
@@ -67,7 +67,7 @@
       <div class="wrap">
         <span class="eyebrow">Advanced version</span>
         <h1>The same protection, <span class="serif">built for a security team.</span></h1>
-        <p class="lead">Shield360 Endpoint Advanced keeps everything in the standard edition and adds roles, single sign‑on, incidents, detection rules, and vulnerability and compliance tracking. It runs as two Windows services on PostgreSQL.</p>
+        <p class="lead">Shield360 Endpoint Advanced keeps everything in the standard edition and adds roles, single sign‑on, event search, detection rules, incidents, vulnerability and compliance tracking, and health scores. It runs as two Windows services on PostgreSQL, which the installer can set up for you.</p>
         <div class="one">
           <div class="code">
             <button class="copy" data-copy="cmd-one" aria-label="Copy install command">Copy</button>
@@ -87,28 +87,44 @@
         <h2>What it adds</h2>
         <div class="adv-grid">
           <div>
-            <h3>Roles and single sign‑on</h3>
-            <p>Admin, analyst and read‑only users, each with their own sign‑in. Sign in with Microsoft Entra ID or Google Workspace, pinned to your organisation.</p>
+            <h3>Roles, invites and single sign‑on</h3>
+            <p>Admin, SOC analyst and read‑only users, each with their own sign‑in. Invite people by email with a one‑time link, or let them sign in with Microsoft Entra ID or Google Workspace, pinned to your organisation.</p>
+          </div>
+          <div>
+            <h3>Approve new endpoints</h3>
+            <p>Turn off automatic approval and a newly enrolled machine waits in the Approvals queue until someone confirms it belongs to you.</p>
+          </div>
+          <div>
+            <h3>Event search</h3>
+            <p>Agents forward process starts, network connections, sign‑ins, failed sign‑ins, lockouts, removals from groups and deleted accounts. Search them across the fleet, follow one endpoint's timeline, and find programs that run on only a few machines.</p>
+          </div>
+          <div>
+            <h3>Detection rules</h3>
+            <p>Write your own rules on those events, with a threshold and a time window such as 20 failures in an hour. A rule can count by a field across endpoints, so one account failing on many machines raises an alert on each of them.</p>
           </div>
           <div>
             <h3>Incidents</h3>
             <p>Open an incident from one or more alerts, give it an owner and a priority, and close it with a reason. Each priority has a response and a resolution target, and a missed target sends a notification.</p>
           </div>
           <div>
-            <h3>Detection rules and hunting</h3>
-            <p>Write your own rules on endpoint events, search process starts and connections across the fleet, and find programs that run on only a few machines.</p>
-          </div>
-          <div>
             <h3>Vulnerabilities</h3>
-            <p>Missing Windows security updates and installed programs with a known CVE, flagged when CISA lists the CVE as exploited, with its CVSS score and its EPSS chance of exploitation. Deadlines per severity and risk acceptance are included.</p>
+            <p>Missing Windows security updates and installed programs with a known CVE, flagged when CISA lists the CVE as exploited, with its CVSS score and its EPSS chance of exploitation. Deadlines per severity, risk acceptance, and your own additions to the list of programs that are checked.</p>
           </div>
           <div>
             <h3>Compliance</h3>
-            <p>CIS Controls v8.1 and ISO/IEC 27001:2022 scores from what the agents already report, per control and per endpoint, with the change since last week and a CSV report.</p>
+            <p>CIS Controls v8.1 and ISO/IEC 27001:2022 scores from what the agents already report, including password, lockout and audit policy, per control and per endpoint, with the change since last week and a CSV report.</p>
+          </div>
+          <div>
+            <h3>Health scores</h3>
+            <p>Every endpoint gets a 0–100 health score with a 7‑day trend. The whole fleet gets a health index with a 30‑day trend, and the console shows exactly how it is worked out.</p>
+          </div>
+          <div>
+            <h3>An overview that tells you what to fix</h3>
+            <p>How many endpoints have each control in effect (antivirus, EDR, automatic isolation, backup, USB control, web filtering), open incidents and exposures, and a setup checklist for a new server.</p>
           </div>
           <div>
             <h3>Dashboards and a monthly report</h3>
-            <p>Five dashboards, a security health index for the whole fleet, and a printable monthly posture report.</p>
+            <p>Five dashboards for endpoints, alerts, vulnerabilities, compliance and EDR activity, and a printable monthly posture report.</p>
           </div>
         </div>
       </div>

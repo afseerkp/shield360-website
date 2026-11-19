@@ -244,7 +244,7 @@
           <article class="mini-card reveal">
             <span class="mc-num">01</span>
             <h3>The agent</h3>
-            <p>Pure Windows PowerShell 5.1 — already on every supported machine. Runs as a SYSTEM scheduled task with a watchdog that restarts it within 5 minutes.</p>
+            <p>Pure Windows PowerShell 5.1 — already on every supported machine. Runs as a SYSTEM scheduled task with a watchdog that restarts it within 5 minutes, and updates itself when the server has a newer version.</p>
           </article>
           <article class="mini-card reveal">
             <span class="mc-num">02</span>
@@ -481,7 +481,7 @@
         <div class="reveal">
           <span class="eyebrow">Built‑in alert rules</span>
           <h2>Alerts that <span class="serif">raise and resolve</span> themselves.</h2>
-          <p class="lead">Sensible rules out of the box, thresholds you can tune in <code>config.json</code>. When the condition clears, the alert closes on its own — no stale queue to triage on Monday.</p>
+          <p class="lead">Sensible rules out of the box, thresholds you can tune in <code>config.json</code>. When the condition clears, the alert closes on its own — no stale queue to triage on Monday. New alerts can go out by email, to a Microsoft Teams channel or to any webhook.</p>
         </div>
         <div class="sev-list reveal">
           <div class="sev-row"><span class="badge crit">Critical</span><p>No active antivirus · Defender real‑time off · Threat detected · Auto‑isolated</p></div>
@@ -574,7 +574,7 @@
           </div>
         </div>
 
-        <p class="reveal" style="margin-top:20px;color:var(--muted);font-size:15px">Need roles, single sign‑on, incidents, and vulnerability and compliance tracking? <a class="text-link" href="advanced/">See the Advanced version (preview) →</a></p>
+        <p class="reveal" style="margin-top:20px;color:var(--muted);font-size:15px">Need roles, single sign‑on, event search and detection rules, incidents, vulnerability and compliance tracking, or health scores and dashboards? <a class="text-link" href="advanced/">See the Advanced version (preview) →</a></p>
 
         <div class="reqs reveal">
           <div class="req">
@@ -601,9 +601,7 @@
           <h2>What's <span class="serif">next.</span></h2>
         </div>
         <div class="road reveal">
-          <span>Agent self‑update</span>
-          <span>Email, Teams &amp; Slack notifications</span>
-          <span>Multiple admins with roles</span>
+          <span>Slack notifications</span>
           <span>Signed MSI agent package</span>
           <span>Restore from quarantine</span>
           <span>Microsoft Defender for Endpoint integration</span>
