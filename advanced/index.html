@@ -75,6 +75,7 @@
           </div>
         </div>
         <p class="adv-note"><b>This is a preview.</b> Install it on a spare server first, not over a server you rely on. The <a class="text-link" href="/">standard edition</a> is still the supported release, and its downloads have not changed.</p>
+        <p class="adv-note"><b>Note the <code>/advanced/</code> in the command.</b> The standard edition's command, <code>irm https://shield360.biz/install.ps1 | iex</code>, installs or upgrades the standard edition and never switches a server to Advanced. To move a standard server across, see <a class="text-link" href="#move">Move from the standard edition</a>.</p>
         <div class="adv-links">
           <a class="btn btn-primary" href="#install">How to install</a>
           <a class="btn btn-ghost" href="install.ps1" target="_blank" rel="noopener">Read install.ps1</a>
@@ -201,7 +202,7 @@
 <pre id="cmd-install">.\Install-Shield360Server.ps1 -Connection "Host=localhost;Database=shield360;Username=shield360;Password=..."</pre>
             </div>
           </div>
-          <div>
+          <div id="move">
             <h3>Move from the standard edition</h3>
             <p>On the standard edition's server, from the extracted package. It takes over the port and HTTPS certificate, so agents keep the same address, stops the standard server, and imports endpoints, policies, users with their passwords, alerts and events. The standard server's folder is kept for a rollback. This installs PostgreSQL too; to use your own database, give <code style="white-space:nowrap">-Connection</code> instead of <code style="white-space:nowrap">-InstallPostgreSql</code>.</p>
             <div class="code">

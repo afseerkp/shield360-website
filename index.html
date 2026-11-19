@@ -635,6 +635,10 @@
             <p>It checks for Node.js 22.13+ (installing the LTS with winget if missing), downloads the release package from shield360.biz, verifies its SHA‑256 checksum, extracts it to <code>C:\Shield360 Endpoint</code>, creates an HTTPS certificate and registers the server to start automatically. Upgrades keep your config and data. <a class="text-link" href="install.ps1" target="_blank" rel="noopener">Read the script</a> before you run it.</p>
           </details>
           <details>
+            <summary>Which install command do I use?</summary>
+            <p><code>irm https://shield360.biz/install.ps1 | iex</code> installs or upgrades the standard edition. The Advanced version (preview) has its own command, with <code>/advanced/</code> in it: <code>irm https://shield360.biz/advanced/install.ps1 | iex</code>, which also upgrades an Advanced server. Running the standard command never switches a server to Advanced; to move a standard server across with its endpoints, users and history, see <a class="text-link" href="advanced/#move">Move from the standard edition</a>.</p>
+          </details>
+          <details>
             <summary>How do I pilot a policy safely?</summary>
             <p>Use <b>Report only</b> mode. The agent measures compliance for every setting but changes nothing, and raises alerts instead of isolating. Switch to Enforce when you're happy.</p>
           </details>
