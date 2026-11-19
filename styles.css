@@ -45,7 +45,8 @@ h1, h2, h3, h4, h5 { margin: 0; font-weight: 600; letter-spacing: -.02em; line-h
 p { margin: 0; }
 ::selection { background: var(--accent-fill); color: #fff; }
 
-.wrap { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+/* Grows with wide monitors (1200px up to 1920px); paragraphs keep their own max-width for readable lines. */
+.wrap { width: 100%; max-width: clamp(1200px, 86vw, 1920px); margin: 0 auto; padding: 0 clamp(24px, 2.5vw, 48px); }
 .serif { font-family: var(--serif); font-style: italic; font-weight: 400; letter-spacing: -.01em; }
 .accent-text {
   background: linear-gradient(100deg, var(--accent) 10%, var(--accent-2) 60%, #a5f3fc);
