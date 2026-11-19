@@ -117,15 +117,15 @@
     <section class="adv" id="install">
       <div class="wrap">
         <h2>Install</h2>
-        <p>One command, from Windows PowerShell opened as Administrator. It downloads the package, checks its SHA‑256, asks which database to use, and installs the two services.</p>
+        <p>One command, from Windows PowerShell opened as Administrator. It downloads the package, checks its SHA‑256, installs PostgreSQL or connects to yours, and installs the two services.</p>
         <ol class="adv-steps">
           <li>
-            <h3>Create a database</h3>
-            <p>On PostgreSQL 16 or newer, create an empty database and a login that owns it. TimescaleDB is optional.</p>
+            <h3>Choose a database</h3>
+            <p>The installer can install PostgreSQL 17 on this server for you. To use a PostgreSQL 16 or newer you already run, create an empty database and a login that owns it. TimescaleDB is optional.</p>
           </li>
           <li>
             <h3>Run the installer</h3>
-            <p>Answer five questions: the PostgreSQL server, port, database, login and password. Enter accepts the suggested value.</p>
+            <p>It first asks whether to install PostgreSQL here. Answer Y and it does the rest, in about ten minutes. Answer N and give the PostgreSQL server, port, database, login and password. Enter accepts the suggested value.</p>
             <div class="code">
               <button class="copy" data-copy="cmd-run" aria-label="Copy command">Copy</button>
 <pre id="cmd-run">irm https://shield360.biz/advanced/install.ps1 | iex</pre>
@@ -138,7 +138,15 @@
         </ol>
         <div class="adv-grid">
           <div>
-            <h3>Without questions</h3>
+            <h3>With PostgreSQL, without questions</h3>
+            <p>Installs PostgreSQL 17 from EnterpriseDB after checking its signature, listening on this server only. Its superuser password is kept for administrators in <code>C:\ProgramData\Shield360 Server\postgresql-superuser.txt</code>.</p>
+            <div class="code">
+              <button class="copy" data-copy="cmd-pg" aria-label="Copy command">Copy</button>
+<pre id="cmd-pg">&amp; ([scriptblock]::Create((irm https://shield360.biz/advanced/install.ps1))) -InstallPostgreSql</pre>
+            </div>
+          </div>
+          <div>
+            <h3>Your database, without questions</h3>
             <p>Give the connection string up front, for a runbook or remote PowerShell.</p>
             <div class="code">
               <button class="copy" data-copy="cmd-silent" aria-label="Copy command">Copy</button>
@@ -163,7 +171,7 @@
           </div>
           <div>
             <h3>Upgrade</h3>
-            <p>Run the same one‑liner on the server. It keeps the database connection already configured and asks nothing.</p>
+            <p>Run the same one‑liner on the server. It keeps the database, port and HTTPS certificate already configured and asks nothing. The console's Settings → Server version says when a newer release is out.</p>
             <div class="code">
               <button class="copy" data-copy="cmd-up" aria-label="Copy command">Copy</button>
 <pre id="cmd-up">irm https://shield360.biz/advanced/install.ps1 | iex</pre>
@@ -178,8 +186,16 @@
             </div>
           </div>
           <div>
+            <h3>Move from the standard edition</h3>
+            <p>On the standard edition's server, from the extracted package. It takes over the port and HTTPS certificate, so agents keep the same address, stops the standard server, and imports endpoints, policies, users with their passwords, alerts and events. The standard server's folder is kept for a rollback.</p>
+            <div class="code">
+              <button class="copy" data-copy="cmd-move" aria-label="Copy command">Copy</button>
+<pre id="cmd-move">.\Install-Shield360Server.ps1 -Connection "Host=localhost;Database=shield360;Username=shield360;Password=..." -ImportFrom "C:\Shield360 Endpoint\server"</pre>
+            </div>
+          </div>
+          <div>
             <h3>Remove</h3>
-            <p>From the extracted package. It removes the services and the firewall rule; the database is kept.</p>
+            <p>From the extracted package. It removes the services and the firewall rule; the program files and the database are kept.</p>
             <div class="code">
               <button class="copy" data-copy="cmd-rm" aria-label="Copy command">Copy</button>
 <pre id="cmd-rm">.\Install-Shield360Server.ps1 -Uninstall</pre>
@@ -195,7 +211,7 @@
         <dl class="facts">
           <dt>Release</dt><dd id="rel-version">See latest.json</dd>
           <dt>SHA‑256</dt><dd class="mono" id="rel-sha">–</dd>
-          <dt>Needs</dt><dd>A 64‑bit Windows Server or Windows machine, Administrator, and PostgreSQL 16 or newer. No .NET runtime and no Node.js.</dd>
+          <dt>Needs</dt><dd>A 64‑bit Windows Server or Windows machine, Administrator, and PostgreSQL 16 or newer (or let the installer install PostgreSQL 17). No .NET runtime and no Node.js.</dd>
           <dt>Installs to</dt><dd><code>C:\Program Files\Shield360 Server</code>, server files in <code>C:\ProgramData\Shield360 Server</code>, data in PostgreSQL</dd>
           <dt>Runs as</dt><dd>The “Shield360 Server” and “Shield360 Worker” services, each under its own low‑privilege service account</dd>
           <dt>Port</dt><dd>8080 by default; change it with <code>-Port</code></dd>
