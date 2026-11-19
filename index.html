@@ -89,6 +89,7 @@
             <code id="hero-cmd">irm https://shield360.biz/install.ps1 | iex</code>
             <button class="copy" data-copy="hero-cmd" aria-label="Copy install command">Copy</button>
           </div>
+          <p class="reveal" style="margin-top:10px;color:var(--muted);font-size:14px">This installs the standard edition. <a class="text-link" href="#advanced">The Advanced version (preview) has its own command →</a></p>
           <ul class="hero-facts reveal" aria-label="Highlights">
             <li><b>0</b> npm packages</li>
             <li><b>0</b> extra software on endpoints</li>
@@ -574,7 +575,20 @@
           </div>
         </div>
 
-        <p class="reveal" style="margin-top:20px;color:var(--muted);font-size:15px">Need roles, single sign‑on, event search and detection rules, incidents, vulnerability and compliance tracking, or health scores and dashboards? <a class="text-link" href="advanced/">See the Advanced version (preview) →</a></p>
+        <div class="downloads reveal" id="advanced">
+          <div class="dl-head">
+            <div>
+              <h3>Advanced version (preview)</h3>
+              <p>Roles, single sign‑on, event search and detection rules, incidents, vulnerability and compliance tracking, health scores and dashboards, on PostgreSQL. It has its own command, with <code>/advanced/</code> in it, which also upgrades an Advanced server. Run it from Windows PowerShell as Administrator.</p>
+            </div>
+            <a class="btn btn-ghost btn-sm" href="advanced/">See the Advanced version →</a>
+          </div>
+          <div class="code">
+            <button class="copy" data-copy="adv-cmd" aria-label="Copy Advanced install command">Copy</button>
+<pre id="adv-cmd">irm https://shield360.biz/advanced/install.ps1 | iex</pre>
+          </div>
+          <p style="margin-top:12px;color:var(--muted);font-size:14px">The standard command above never switches a server to Advanced. To move a standard server across with its endpoints, users and history, see <a class="text-link" href="advanced/#move">Move from the standard edition</a>.</p>
+        </div>
 
         <div class="reqs reveal">
           <div class="req">
